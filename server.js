@@ -207,7 +207,7 @@ const checkDb = (req, res, next) => {
 const exerciseLibrary = {
     abs: [
         {
-            id: 'crunch', name: 'Crunch', name_ar: 'تمرين البطن', category: 'abs',
+            id: 'crunch', name: 'Ab Crunch', name_ar: 'تمرين انقباض البطن', category: 'abs',
             sets: 3, reps: 15, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/246.png',
             instructions: ['Lie on your back with knees bent and feet flat', 'Place hands behind head lightly', 'Exhale and lift shoulders off the floor', 'Lower slowly and repeat'],
@@ -216,7 +216,7 @@ const exerciseLibrary = {
             tips_ar: ['لا تشد رقبتك', 'ركز على انقباض عضلات البطن']
         },
         {
-            id: 'leg-raises', name: 'Leg Raises', name_ar: 'رفع الأرجل', category: 'abs',
+            id: 'leg-raises', name: 'Hanging Leg Raise', name_ar: 'رفع الأرجل المعلق', category: 'abs',
             sets: 3, reps: 12, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/91.png',
             instructions: ['Lie flat on your back, legs straight', 'Keep hands under your hips for support', 'Raise legs to 90 degrees', 'Lower slowly without touching the floor'],
@@ -225,7 +225,7 @@ const exerciseLibrary = {
             tips_ar: ['حافظ على أسفل الظهر على الأرض', 'تحكم في مرحلة الخفض']
         },
         {
-            id: 'plank', name: 'Plank', name_ar: 'البلانك', category: 'abs',
+            id: 'plank', name: 'Forearm Plank Hold', name_ar: 'تثبيت البلانك على الساعدين', category: 'abs',
             sets: 3, reps: '30 sec', restTime: 30,
             gifUrl: 'https://wger.de/static/images/exercises/small/222.png',
             instructions: ['Start in forearm plank position', 'Keep body in a straight line from head to heels', 'Engage core and glutes', 'Hold the position'],
@@ -234,7 +234,7 @@ const exerciseLibrary = {
             tips_ar: ['لا تترك الوركين ينخفضان أو يرتفعان', 'تنفس بانتظام']
         },
         {
-            id: 'russian-twist', name: 'Russian Twist', name_ar: 'اللف الروسي', category: 'abs',
+            id: 'russian-twist', name: 'Oblique Rotational Twist', name_ar: 'تدوير العضلة المائلة', category: 'abs',
             sets: 3, reps: 20, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/307.png',
             instructions: ['Sit with knees bent at 45 degrees', 'Lean back slightly keeping back straight', 'Clasp hands together in front', 'Rotate torso side to side'],
@@ -243,7 +243,7 @@ const exerciseLibrary = {
             tips_ar: ['ابقِ القدمين مرفوعتين لصعوبة أكبر', 'المس الأرض من كل جانب']
         },
         {
-            id: 'bicycle-crunch', name: 'Bicycle Crunch', name_ar: 'تمرين الدراجة', category: 'abs',
+            id: 'bicycle-crunch', name: 'Cross-Body Crunch', name_ar: 'انقباض البطن المتقاطع', category: 'abs',
             sets: 3, reps: 20, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/247.png',
             instructions: ['Lie on back, hands behind head', 'Bring right knee to chest while twisting left elbow toward it', 'Alternate sides in pedaling motion'],
@@ -252,7 +252,7 @@ const exerciseLibrary = {
             tips_ar: ['تحرك ببطء وتحكم', 'ابقِ الكتفين مرفوعين طوال الوقت']
         },
         {
-            id: 'heel-touch', name: 'Heel Touch', name_ar: 'لمس الكعب', category: 'abs',
+            id: 'heel-touch', name: 'Lateral Oblique Reach', name_ar: 'مد العضلة المائلة الجانبي', category: 'abs',
             sets: 3, reps: 25, restTime: 30,
             gifUrl: 'https://wger.de/static/images/exercises/small/246.png',
             instructions: ['Lie on back with knees bent', 'Lift shoulders slightly off floor', 'Reach right hand to right heel', 'Alternate sides rhythmically'],
@@ -261,7 +261,7 @@ const exerciseLibrary = {
             tips_ar: ['حافظ على شد البطن', 'لا تحبس أنفاسك']
         },
         {
-            id: 'mountain-climber', name: 'Mountain Climber', name_ar: 'تسلق الجبل', category: 'abs',
+            id: 'mountain-climber', name: 'Dynamic Plank Drive', name_ar: 'دفع البلانك الديناميكي', category: 'abs',
             sets: 3, reps: '30 sec', restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/343.png',
             instructions: ['Start in high plank position', 'Drive right knee toward chest', 'Quickly switch legs', 'Maintain flat back throughout'],
@@ -270,7 +270,7 @@ const exerciseLibrary = {
             tips_ar: ['حافظ على مستوى الوركين', 'زد السرعة لتأثير الكارديو']
         },
         {
-            id: 'hollow-hold', name: 'Hollow Hold', name_ar: 'وضع الجوف', category: 'abs',
+            id: 'hollow-hold', name: 'Hollow Body Hold', name_ar: 'تثبيت الجسم المجوف', category: 'abs',
             sets: 3, reps: '20 sec', restTime: 30,
             gifUrl: 'https://wger.de/static/images/exercises/small/222.png',
             instructions: ['Lie on back, extend arms overhead', 'Lift legs, arms and shoulders off ground', 'Press lower back into floor', 'Hold position'],
@@ -279,7 +279,7 @@ const exerciseLibrary = {
             tips_ar: ['يجب أن يبقى أسفل الظهر على الأرض', 'ابقِ الأرجل منخفضة قدر الإمكان']
         },
         {
-            id: 'dead-bug', name: 'Dead Bug', name_ar: 'الخنفساء الميتة', category: 'abs',
+            id: 'dead-bug', name: 'Core Stability Extension', name_ar: 'تمرين تثبيت الجذع', category: 'abs',
             sets: 3, reps: 10, restTime: 30,
             gifUrl: 'https://wger.de/static/images/exercises/small/222.png',
             instructions: ['Lie on back, arms up, knees at 90°', 'Slowly extend right arm and left leg toward floor', 'Return to start and alternate', 'Keep lower back flat throughout'],
@@ -288,7 +288,7 @@ const exerciseLibrary = {
             tips_ar: ['تحرك ببطء وتحكم', 'ازفر عند المد']
         },
         {
-            id: 'v-ups', name: 'V-Ups', name_ar: 'تمرين في', category: 'abs',
+            id: 'v-ups', name: 'Full Body V-Raise', name_ar: 'الرفع الكامل على شكل V', category: 'abs',
             sets: 3, reps: 12, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/91.png',
             instructions: ['Lie flat, arms overhead and legs straight', 'Simultaneously raise legs and torso to form a V', 'Touch toes at the top', 'Lower slowly'],
@@ -297,7 +297,7 @@ const exerciseLibrary = {
             tips_ar: ['ابقِ الأرجل مستقيمة', 'سريع للأعلى، بطيء للأسفل']
         },
         {
-            id: 'side-plank', name: 'Side Plank', name_ar: 'البلانك الجانبي', category: 'abs',
+            id: 'side-plank', name: 'Lateral Core Plank', name_ar: 'بلانك الجذع الجانبي', category: 'abs',
             sets: 3, reps: '20 sec each', restTime: 30,
             gifUrl: 'https://wger.de/static/images/exercises/small/222.png',
             instructions: ['Lie on side, prop on forearm', 'Lift hips to form a straight line', 'Stack feet or stagger for balance', 'Hold position then switch sides'],
@@ -306,7 +306,7 @@ const exerciseLibrary = {
             tips_ar: ['حافظ على استقامة الجسم', 'لا تترك الوركين ينخفضان']
         },
         {
-            id: 'flutter-kicks', name: 'Flutter Kicks', name_ar: 'الركل المتناوب', category: 'abs',
+            id: 'flutter-kicks', name: 'Low Leg Flutter', name_ar: 'رفرفة الأرجل المنخفضة', category: 'abs',
             sets: 3, reps: '30 sec', restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/91.png',
             instructions: ['Lie flat on back, hands under hips', 'Lift legs about 6 inches off ground', 'Alternate kicking legs up and down in small motions', 'Keep core tight throughout'],
@@ -318,7 +318,7 @@ const exerciseLibrary = {
 
     legs: [
         {
-            id: 'bodyweight-squat', name: 'Bodyweight Squat', name_ar: 'القرفصاء بالوزن', category: 'legs',
+            id: 'bodyweight-squat', name: 'Deep Air Squat', name_ar: 'القرفصاء العميقة', category: 'legs',
             sets: 4, reps: 15, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/8.png',
             instructions: ['Stand feet shoulder-width apart, toes slightly out', 'Push hips back and bend knees', 'Lower until thighs parallel to floor', 'Drive through heels to stand'],
@@ -327,7 +327,7 @@ const exerciseLibrary = {
             tips_ar: ['الصدر مرفوع، البطن مشدود', 'الركبتان تتبعان اتجاه أصابع القدم']
         },
         {
-            id: 'forward-lunge', name: 'Forward Lunge', name_ar: 'الاندفاع الأمامي', category: 'legs',
+            id: 'forward-lunge', name: 'Forward Power Lunge', name_ar: 'الاندفاع الأمامي القوي', category: 'legs',
             sets: 3, reps: 12, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/33.png',
             instructions: ['Stand tall with feet together', 'Step forward with one leg', 'Lower hips until both knees at 90°', 'Push off front foot to return'],
@@ -336,7 +336,7 @@ const exerciseLibrary = {
             tips_ar: ['الركبة الأمامية فوق الكاحل', 'الجذع مستقيم طوال الوقت']
         },
         {
-            id: 'reverse-lunge', name: 'Reverse Lunge', name_ar: 'الاندفاع الخلفي', category: 'legs',
+            id: 'reverse-lunge', name: 'Reverse Step Lunge', name_ar: 'الاندفاع الخطوي الخلفي', category: 'legs',
             sets: 3, reps: 12, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/33.png',
             instructions: ['Stand with feet hip-width apart', 'Step one foot backward', 'Lower back knee toward floor', 'Return to start and alternate'],
@@ -345,7 +345,7 @@ const exerciseLibrary = {
             tips_ar: ['تحكم في الحركة', 'ممتاز للتوازن']
         },
         {
-            id: 'calf-raises', name: 'Calf Raises', name_ar: 'رفع السمانة', category: 'legs',
+            id: 'calf-raises', name: 'Standing Calf Raise', name_ar: 'رفع الكعب الواقف', category: 'legs',
             sets: 3, reps: 20, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/18.png',
             instructions: ['Stand with feet hip-width apart', 'Rise up on toes as high as possible', 'Hold briefly at top', 'Lower slowly'],
@@ -354,7 +354,7 @@ const exerciseLibrary = {
             tips_ar: ['نطاق حركة كامل', 'استخدم حافة الدرجة لنطاق أوسع']
         },
         {
-            id: 'wall-sit', name: 'Wall Sit', name_ar: 'الجلوس على الحائط', category: 'legs',
+            id: 'wall-sit', name: 'Isometric Wall Squat', name_ar: 'قرفصاء الحائط الثابتة', category: 'legs',
             sets: 3, reps: '45 sec', restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/8.png',
             instructions: ['Stand against wall, feet shoulder-width', 'Slide down until knees at exactly 90°', 'Thighs parallel to floor', 'Hold position'],
@@ -363,7 +363,7 @@ const exerciseLibrary = {
             tips_ar: ['الظهر مسطح على الحائط', 'لا تترك الركبتين تنهاران للداخل']
         },
         {
-            id: 'glute-bridge', name: 'Glute Bridge', name_ar: 'رفع الحوض', category: 'legs',
+            id: 'glute-bridge', name: 'Glute Bridge Press', name_ar: 'ضغط الجسر الخلفي', category: 'legs',
             sets: 3, reps: 15, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/75.png',
             instructions: ['Lie on back, knees bent, feet flat', 'Drive hips up by squeezing glutes', 'Form straight line from knees to shoulders', 'Lower slowly'],
@@ -372,7 +372,7 @@ const exerciseLibrary = {
             tips_ar: ['اضغط الأرداف في الأعلى', 'اضغط القدمين على الأرض بقوة']
         },
         {
-            id: 'single-leg-glute-bridge', name: 'Single Leg Glute Bridge', name_ar: 'رفع الحوض برجل واحدة', category: 'legs',
+            id: 'single-leg-glute-bridge', name: 'Single Leg Hip Thrust', name_ar: 'دفع الورك أحادي الساق', category: 'legs',
             sets: 3, reps: 10, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/75.png',
             instructions: ['Lie on back, one knee bent, other leg extended', 'Drive hips up using the bent leg', 'Hold at top for 2 seconds', 'Lower slowly and repeat then switch'],
@@ -381,7 +381,7 @@ const exerciseLibrary = {
             tips_ar: ['حافظ على مستوى الوركين', 'أصعب من رفع الحوض العادي']
         },
         {
-            id: 'sumo-squat', name: 'Sumo Squat', name_ar: 'قرفصاء السومو', category: 'legs',
+            id: 'sumo-squat', name: 'Wide Stance Power Squat', name_ar: 'القرفصاء القوية الواسعة', category: 'legs',
             sets: 3, reps: 15, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/8.png',
             instructions: ['Stand with feet wider than shoulders, toes pointed out', 'Lower hips straight down', 'Keep chest tall', 'Drive through heels to return'],
@@ -390,7 +390,7 @@ const exerciseLibrary = {
             tips_ar: ['يستهدف الفخذ الداخلي', 'الركبتان فوق أصابع القدم']
         },
         {
-            id: 'step-up', name: 'Step Up', name_ar: 'الصعود والنزول', category: 'legs',
+            id: 'step-up', name: 'Elevated Step Drive', name_ar: 'الدفع على المرتفع', category: 'legs',
             sets: 3, reps: 12, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/33.png',
             instructions: ['Stand in front of step or bench', 'Step up with right foot, drive left knee up', 'Step back down with control', 'Alternate legs'],
@@ -399,7 +399,7 @@ const exerciseLibrary = {
             tips_ar: ['ادفع بكعب القدم الصاعدة', 'حافظ على استقامة الجذع']
         },
         {
-            id: 'lateral-lunge', name: 'Lateral Lunge', name_ar: 'الاندفاع الجانبي', category: 'legs',
+            id: 'lateral-lunge', name: 'Side Squat Stretch', name_ar: 'القرفصاء الجانبية الممتدة', category: 'legs',
             sets: 3, reps: 10, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/33.png',
             instructions: ['Stand with feet together', 'Step wide to the right side', 'Sit into right hip, keep left leg straight', 'Push back to center and repeat other side'],
@@ -408,7 +408,7 @@ const exerciseLibrary = {
             tips_ar: ['الركبة تبقى فوق القدم', 'يعمل الفخذ الداخلي والأرداف']
         },
         {
-            id: 'jump-squat', name: 'Jump Squat', name_ar: 'قفز القرفصاء', category: 'legs',
+            id: 'jump-squat', name: 'Explosive Jump Squat', name_ar: 'القرفصاء التفجيرية', category: 'legs',
             sets: 3, reps: 10, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/8.png',
             instructions: ['Stand in squat stance', 'Lower into squat position', 'Explosively jump up', 'Land softly and immediately lower into next squat'],
@@ -417,7 +417,7 @@ const exerciseLibrary = {
             tips_ar: ['هبوط لطيف لحماية الركبتين', 'انزل بركبتين مثنيتين لطيفاً']
         },
         {
-            id: 'donkey-kick', name: 'Donkey Kick', name_ar: 'ركلة الحمار', category: 'legs',
+            id: 'donkey-kick', name: 'Glute Kickback', name_ar: 'رفع الساق الخلفي', category: 'legs',
             sets: 3, reps: 15, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/75.png',
             instructions: ['Start on hands and knees', 'Keep knee bent at 90°', 'Push one leg back and up', 'Squeeze glute at top, lower and repeat'],
@@ -429,7 +429,7 @@ const exerciseLibrary = {
 
     'full-body': [
         {
-            id: 'pushup', name: 'Push Up', name_ar: 'تمرين الضغط', category: 'full-body',
+            id: 'pushup', name: 'Standard Push-Up', name_ar: 'تمرين الضغط الأساسي', category: 'full-body',
             sets: 3, reps: 12, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Start in plank, hands shoulder-width', 'Lower chest toward floor, elbows at 45°', 'Push back up to full arm extension', 'Keep body rigid throughout'],
@@ -438,7 +438,7 @@ const exerciseLibrary = {
             tips_ar: ['لا تفرد المرفقين للخارج', 'نطاق حركة كامل']
         },
         {
-            id: 'wide-pushup', name: 'Wide Push Up', name_ar: 'الضغط الواسع', category: 'full-body',
+            id: 'wide-pushup', name: 'Wide Grip Push-Up', name_ar: 'الضغط بالقبضة الواسعة', category: 'full-body',
             sets: 3, reps: 10, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Hands placed wider than shoulders', 'Lower chest to floor', 'Keep elbows flared outward', 'Push back up'],
@@ -447,7 +447,7 @@ const exerciseLibrary = {
             tips_ar: ['يستهدف الصدر أكثر', 'رائع لتطوير عضلة الصدر']
         },
         {
-            id: 'diamond-pushup', name: 'Diamond Push Up', name_ar: 'الضغط الماسي', category: 'full-body',
+            id: 'diamond-pushup', name: 'Close Grip Tricep Push-Up', name_ar: 'ضغط الترايسبس الضيق', category: 'full-body',
             sets: 3, reps: 8, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Hands together, forming a diamond under chest', 'Lower chest toward hands', 'Keep elbows close to body', 'Push back up'],
@@ -456,7 +456,7 @@ const exerciseLibrary = {
             tips_ar: ['التنويع الأصعب، يستهدف الترايسبس', 'حافظ على استقامة الجسم']
         },
         {
-            id: 'incline-pushup', name: 'Incline Push Up', name_ar: 'الضغط المائل', category: 'full-body',
+            id: 'incline-pushup', name: 'Elevated Push-Up', name_ar: 'الضغط على المرتفع', category: 'full-body',
             sets: 3, reps: 15, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Hands on elevated surface like chair or step', 'Perform standard pushup', 'Easier on joints for beginners'],
@@ -465,7 +465,7 @@ const exerciseLibrary = {
             tips_ar: ['نقطة بداية جيدة للمبتدئين', 'السطح المنخفض = أصعب']
         },
         {
-            id: 'decline-pushup', name: 'Decline Push Up', name_ar: 'الضغط المنحدر', category: 'full-body',
+            id: 'decline-pushup', name: 'Feet-Elevated Push-Up', name_ar: 'الضغط برفع القدمين', category: 'full-body',
             sets: 3, reps: 10, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Feet elevated on chair or bench', 'Hands on floor, shoulder-width', 'Lower chest to floor', 'Push back up'],
@@ -474,7 +474,7 @@ const exerciseLibrary = {
             tips_ar: ['يعمل أعلى الصدر أكثر', 'أصعب من الضغط العادي']
         },
         {
-            id: 'dips', name: 'Tricep Dips', name_ar: 'تمرين الغطس', category: 'full-body',
+            id: 'dips', name: 'Bench Tricep Dip', name_ar: 'غطس الترايسبس على المقعد', category: 'full-body',
             sets: 3, reps: 10, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/90.png',
             instructions: ['Sit on edge of chair, hands gripping edge', 'Slide off, supporting weight on hands', 'Bend elbows to lower body', 'Push back up to start'],
@@ -483,7 +483,7 @@ const exerciseLibrary = {
             tips_ar: ['ابقِ الوركين قريبين من الكرسي', 'المرفقان يشيران مباشرة للخلف']
         },
         {
-            id: 'burpee', name: 'Burpee', name_ar: 'بيربي', category: 'full-body',
+            id: 'burpee', name: 'Full Burpee Complex', name_ar: 'تمرين البيربي الكامل', category: 'full-body',
             sets: 3, reps: 8, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/343.png',
             instructions: ['Stand, then drop hands to floor', 'Jump feet back to plank position', 'Do a push up', 'Jump feet forward, then jump up with arms overhead'],
@@ -492,7 +492,7 @@ const exerciseLibrary = {
             tips_ar: ['تمرين جسم كامل', 'يمكن التعديل بالمشي بدل القفز']
         },
         {
-            id: 'pike-pushup', name: 'Pike Push Up', name_ar: 'ضغط الزاوية', category: 'full-body',
+            id: 'pike-pushup', name: 'Inverted V Press', name_ar: 'الضغط المقلوب على شكل V', category: 'full-body',
             sets: 3, reps: 10, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/76.png',
             instructions: ['Form inverted V with hips high', 'Bend elbows, lower head toward floor', 'Press back up', 'Targets shoulders primarily'],
@@ -501,7 +501,7 @@ const exerciseLibrary = {
             tips_ar: ['قرّب اليدين من القدمين للنسخة الأصعب', 'رائع لبناء الأكتاف']
         },
         {
-            id: 'plank-to-pushup', name: 'Plank to Push Up', name_ar: 'بلانك للضغط', category: 'full-body',
+            id: 'plank-to-pushup', name: 'Plank-to-Press Transition', name_ar: 'الانتقال من البلانك للضغط', category: 'full-body',
             sets: 3, reps: 10, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/222.png',
             instructions: ['Start in forearm plank', 'Press up to high plank one arm at a time', 'Lower back to forearms one at a time', 'Alternate leading arm'],
@@ -510,7 +510,7 @@ const exerciseLibrary = {
             tips_ar: ['حافظ على مستوى الوركين', 'ببطء وتحكم']
         },
         {
-            id: 'superman-push', name: 'Superman Push Up', name_ar: 'ضغط سوبرمان', category: 'full-body',
+            id: 'superman-push', name: 'Superman Press-Up', name_ar: 'ضغط السوبرمان المتقدم', category: 'full-body',
             sets: 3, reps: 8, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Start in pushup position', 'Lower to floor completely', 'Lift arms and legs off floor like superman', 'Place hands back and push up'],
@@ -519,7 +519,7 @@ const exerciseLibrary = {
             tips_ar: ['تمرين متقدم', 'ابنِ قوتك بالضغط العادي أولاً']
         },
         {
-            id: 'jump-rope-sim', name: 'Jump Rope (Simulated)', name_ar: 'تقليد تخطي الحبل', category: 'full-body',
+            id: 'jump-rope-sim', name: 'Cardio Jump Drill', name_ar: 'تدريب القفز الكارديو', category: 'full-body',
             sets: 3, reps: '45 sec', restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Stand with feet together', 'Jump on balls of feet', 'Rotate wrists as if holding rope', 'Keep elbows close to sides'],
@@ -528,7 +528,7 @@ const exerciseLibrary = {
             tips_ar: ['قفزات خفيفة ومرنة', 'رائع كإحماء أو إنهاء']
         },
         {
-            id: 'inchworm', name: 'Inchworm', name_ar: 'دودة الأرض', category: 'full-body',
+            id: 'inchworm', name: 'Walking Plank Reach', name_ar: 'المشي بالبلانك للأمام', category: 'full-body',
             sets: 3, reps: 8, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Stand tall, hinge forward', 'Walk hands out to plank', 'Do a push up (optional)', 'Walk hands back to feet, stand up'],
@@ -540,7 +540,7 @@ const exerciseLibrary = {
 
     back: [
         {
-            id: 'superman', name: 'Superman', name_ar: 'سوبرمان', category: 'back',
+            id: 'superman', name: 'Prone Back Extension Lift', name_ar: 'رفع مد الظهر على البطن', category: 'back',
             sets: 3, reps: 15, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Lie face down, arms extended overhead', 'Simultaneously lift arms, chest, and legs', 'Squeeze lower back and glutes at top', 'Hold 2-3 seconds, lower slowly'],
@@ -549,7 +549,7 @@ const exerciseLibrary = {
             tips_ar: ['حافظ على استقامة الرقبة', 'اضغط الأرداف طوال الوقت']
         },
         {
-            id: 'reverse-snow-angel', name: 'Reverse Snow Angel', name_ar: 'ملاك الثلج العكسي', category: 'back',
+            id: 'reverse-snow-angel', name: 'Prone Shoulder Arc', name_ar: 'قوس الكتف على البطن', category: 'back',
             sets: 3, reps: 15, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Lie face down, arms by sides', 'Lift chest and arms slightly', 'Move arms in wide arc overhead then back', 'Like making a snow angel'],
@@ -558,7 +558,7 @@ const exerciseLibrary = {
             tips_ar: ['اضغط لوحي الكتف معاً', 'حركة متحكم بها طوال الوقت']
         },
         {
-            id: 'back-extension', name: 'Back Extension', name_ar: 'مد الظهر', category: 'back',
+            id: 'back-extension', name: 'Lumbar Extension', name_ar: 'مد أسفل الظهر', category: 'back',
             sets: 3, reps: 12, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Lie face down, hands behind head', 'Slowly lift chest and upper body', 'Squeeze lower back muscles', 'Lower slowly and repeat'],
@@ -567,7 +567,7 @@ const exerciseLibrary = {
             tips_ar: ['لا تفرط في مد الرقبة', 'تحكم في الأعلى والأسفل']
         },
         {
-            id: 'bird-dog', name: 'Bird Dog', name_ar: 'طائر الكلب', category: 'back',
+            id: 'bird-dog', name: 'Contralateral Balance Extension', name_ar: 'تمرين التوازن المتقاطع', category: 'back',
             sets: 3, reps: 10, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/222.png',
             instructions: ['Start on hands and knees', 'Extend right arm forward and left leg back', 'Hold 3 seconds, return to start', 'Alternate sides'],
@@ -576,7 +576,7 @@ const exerciseLibrary = {
             tips_ar: ['حافظ على استواء الظهر', 'لا تدور الوركين']
         },
         {
-            id: 'prone-y-raise', name: 'Prone Y Raise', name_ar: 'رفع Y على البطن', category: 'back',
+            id: 'prone-y-raise', name: 'Prone Y-Trap Raise', name_ar: 'رفع الشبكي على شكل Y', category: 'back',
             sets: 3, reps: 12, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Lie face down, arms in Y position overhead', 'Lift arms off ground, squeezing upper back', 'Hold 2 seconds at top', 'Lower with control'],
@@ -585,7 +585,7 @@ const exerciseLibrary = {
             tips_ar: ['الإبهامان يشيران للأعلى', 'يستهدف الشبكي السفلي']
         },
         {
-            id: 'prone-t-raise', name: 'Prone T Raise', name_ar: 'رفع T على البطن', category: 'back',
+            id: 'prone-t-raise', name: 'Prone T-Rear Delt Raise', name_ar: 'رفع الدالية الخلفية على شكل T', category: 'back',
             sets: 3, reps: 12, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Lie face down, arms straight out to sides in T position', 'Raise arms off floor squeezing shoulder blades', 'Hold 2 seconds', 'Lower slowly'],
@@ -594,7 +594,7 @@ const exerciseLibrary = {
             tips_ar: ['الإبهامان للأعلى', 'اشعر بالضغط في منتصف الظهر']
         },
         {
-            id: 'cat-cow', name: 'Cat-Cow Stretch', name_ar: 'تمرين القطة والبقرة', category: 'back',
+            id: 'cat-cow', name: 'Spinal Mobility Flow', name_ar: 'تمرين حركية العمود الفقري', category: 'back',
             sets: 3, reps: 10, restTime: 30,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Start on hands and knees', 'Arch back up (cat) rounding spine', 'Then drop belly down (cow), lift head and tailbone', 'Alternate smoothly'],
@@ -603,7 +603,7 @@ const exerciseLibrary = {
             tips_ar: ['تنفس للداخل أثناء البقرة، للخارج أثناء القطة', 'رائع لحركة العمود الفقري']
         },
         {
-            id: 'child-pose-pull', name: 'Child\'s Pose Pull', name_ar: 'وضع الطفل مع السحب', category: 'back',
+            id: 'child-pose-pull', name: 'Active Spinal Stretch', name_ar: 'الإطالة النشطة للعمود الفقري', category: 'back',
             sets: 3, reps: 10, restTime: 30,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Kneel and sit back toward heels', 'Extend arms forward on floor', 'Pull chest down toward floor', 'Hold 3 seconds, return'],
@@ -612,7 +612,7 @@ const exerciseLibrary = {
             tips_ar: ['يمد الظهر بالكامل', 'رائع لراحة أسفل الظهر']
         },
         {
-            id: 'table-row', name: 'Table Row (Inverted Row)', name_ar: 'شد المائدة', category: 'back',
+            id: 'table-row', name: 'Inverted Bodyweight Row', name_ar: 'الشد العكسي بوزن الجسم', category: 'back',
             sets: 3, reps: 10, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Lie under a sturdy table', 'Grab table edge with overhand grip', 'Pull chest up to touch table', 'Lower with control'],
@@ -621,7 +621,7 @@ const exerciseLibrary = {
             tips_ar: ['القدمان مسطحتان للنسخة الأسهل', 'أفضل تمرين ظهر بوزن الجسم']
         },
         {
-            id: 'door-frame-row', name: 'Door Frame Row', name_ar: 'شد إطار الباب', category: 'back',
+            id: 'door-frame-row', name: 'Isometric Doorway Pull', name_ar: 'الشد الثابت على إطار الباب', category: 'back',
             sets: 3, reps: 10, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Hold both sides of door frame at hip height', 'Lean back until arms straight', 'Pull chest to door frame', 'Lower with control'],
@@ -630,7 +630,7 @@ const exerciseLibrary = {
             tips_ar: ['شد رائع بدون معدات', 'اضبط الميل لتغيير الصعوبة']
         },
         {
-            id: 'prone-cobra', name: 'Prone Cobra', name_ar: 'وضع الكوبرا', category: 'back',
+            id: 'prone-cobra', name: 'Prone Spinal Extension', name_ar: 'مد العمود الفقري على البطن', category: 'back',
             sets: 3, reps: 12, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Lie face down, palms by shoulders', 'Press up lifting chest, keeping pelvis on floor', 'Squeeze shoulder blades together', 'Hold then lower'],
@@ -639,7 +639,7 @@ const exerciseLibrary = {
             tips_ar: ['انظر للأعلى قليلاً، ليس للأمام مباشرة', 'يمد العمود الفقري']
         },
         {
-            id: 'swimming-exercise', name: 'Swimming (Floor)', name_ar: 'السباحة على الأرض', category: 'back',
+            id: 'swimming-exercise', name: 'Prone Alternating Raise', name_ar: 'الرفع المتناوب على البطن', category: 'back',
             sets: 3, reps: '30 sec', restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Lie face down, arms extended', 'Lift opposite arm and leg simultaneously', 'Alternate in smooth swimming motion', 'Keep core engaged'],
@@ -648,7 +648,7 @@ const exerciseLibrary = {
             tips_ar: ['رفرف كالسباحة', 'يبني تحمل عضلات الظهر']
         },
         {
-            id: 'wall-angel', name: 'Wall Angel', name_ar: 'ملاك الحائط', category: 'back',
+            id: 'wall-angel', name: 'Wall Shoulder Slide', name_ar: 'انزلاق الكتف على الحائط', category: 'back',
             sets: 3, reps: 12, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Stand with back flat against wall', 'Arms at 90 degrees against wall', 'Slowly slide arms up overhead keeping contact', 'Return to start'],
@@ -657,7 +657,7 @@ const exerciseLibrary = {
             tips_ar: ['حافظ على ضغط أسفل الظهر على الحائط', 'ممتاز لتصحيح الوضعية']
         },
         {
-            id: 'lat-stretch', name: 'Lat Stretch (Doorway)', name_ar: 'تمرين العضلة العريضة بالباب', category: 'back',
+            id: 'lat-stretch', name: 'Doorway Lat Mobilizer', name_ar: 'تحريك العضلة العريضة بالباب', category: 'back',
             sets: 3, reps: '20 sec hold', restTime: 30,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Hold door frame at shoulder height with one hand', 'Step through slightly and rotate torso away', 'Feel stretch along side of back', 'Hold 20 sec each side'],
@@ -666,7 +666,7 @@ const exerciseLibrary = {
             tips_ar: ['تمدد رائع للعضلة العريضة بدون أدوات', 'تنفس بعمق أثناء الثبات']
         },
         {
-            id: 'thoracic-rotation', name: 'Thoracic Rotation', name_ar: 'دوران العمود الصدري', category: 'back',
+            id: 'thoracic-rotation', name: 'Thoracic Spine Mobilization', name_ar: 'تحريك العمود الفقري الصدري', category: 'back',
             sets: 3, reps: 10, restTime: 30,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Lie on side, knees bent at 90 degrees', 'Top arm reaches behind rotating thoracic spine', 'Follow hand with eyes', 'Return and repeat both sides'],
@@ -675,7 +675,7 @@ const exerciseLibrary = {
             tips_ar: ['حافظ على تراكب الوركين', 'يحسن حركية أعلى الظهر']
         },
         {
-            id: 'scapular-pushup', name: 'Scapular Push Up', name_ar: 'ضغط لوح الكتف', category: 'back',
+            id: 'scapular-pushup', name: 'Scapular Protraction Press', name_ar: 'ضغط تقدُّم لوح الكتف', category: 'back',
             sets: 3, reps: 15, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Start in high plank position', 'Without bending elbows, pinch shoulder blades together', 'Then push them apart as far as possible', 'Repeat controlled'],
@@ -684,7 +684,7 @@ const exerciseLibrary = {
             tips_ar: ['تبقى الذراعان مستقيمتان طوال الوقت', 'ينشط العضلة المنشارية والمعينية']
         },
         {
-            id: 'good-morning', name: 'Good Morning (Bodyweight)', name_ar: 'صباح الخير بوزن الجسم', category: 'back',
+            id: 'good-morning', name: 'Hip Hinge Lower Back Pull', name_ar: 'ثني الورك لأسفل الظهر', category: 'back',
             sets: 3, reps: 12, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Stand feet shoulder-width, hands behind head', 'Hinge at hips pushing them back', 'Lower torso until parallel to floor', 'Drive hips forward to return'],
@@ -693,7 +693,7 @@ const exerciseLibrary = {
             tips_ar: ['حافظ على استقامة الظهر طوال الوقت', 'يقوي أسفل الظهر وأوتار الركبة']
         },
         {
-            id: 'reverse-hyper', name: 'Reverse Hyperextension', name_ar: 'المد العكسي للظهر', category: 'back',
+            id: 'reverse-hyper', name: 'Prone Glute-Back Extension', name_ar: 'مد الأرداف والظهر على البطن', category: 'back',
             sets: 3, reps: 12, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Lie face down on bed edge or bench, legs hanging', 'Squeeze glutes and raise legs to body level', 'Lower slowly', 'Keep upper body still'],
@@ -705,7 +705,7 @@ const exerciseLibrary = {
 
     shoulders: [
         {
-            id: 'pike-pushup-sh', name: 'Pike Push Up', name_ar: 'ضغط الزاوية للأكتاف', category: 'shoulders',
+            id: 'pike-pushup-sh', name: 'Shoulder Press Pike', name_ar: 'ضغط الكتف بوضع V', category: 'shoulders',
             sets: 3, reps: 10, restTime: 60,
             gifUrl: 'https://wger.de/static/images/exercises/small/76.png',
             instructions: ['Form inverted V', 'Lower head toward floor', 'Press back up'],
@@ -714,7 +714,7 @@ const exerciseLibrary = {
             tips_ar: ['يستهدف الدالية الأمامية', 'قرّب القدمين من اليدين للصعوبة']
         },
         {
-            id: 'wall-pushup', name: 'Wall Push Up', name_ar: 'الضغط على الحائط', category: 'shoulders',
+            id: 'wall-pushup', name: 'Vertical Wall Press', name_ar: 'الضغط الرأسي على الحائط', category: 'shoulders',
             sets: 3, reps: 15, restTime: 45,
             gifUrl: 'https://wger.de/static/images/exercises/small/141.png',
             instructions: ['Stand facing wall', 'Place hands on wall shoulder-width', 'Lean in and push back'],
