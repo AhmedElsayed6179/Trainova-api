@@ -1578,7 +1578,7 @@ async function updateStreak(userId) {
 
 // ==================== START SERVER ====================
 
-const PORT = 3000;
+const PORT = 8080;
 app.listen(PORT, () => {
     console.log(`🚀 Trainova Server running on http://localhost:${PORT}`);
     console.log(`🔗 Test: http://localhost:${PORT}/api/test`);
