@@ -27,11 +27,9 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use('/uploads', express.static('uploads'));
 
-// ── GIF Proxy (bypasses hotlink protection on exercise GIF sources) ──────
 app.get('/api/gif-proxy', (req, res) => {
     const url = req.query.url;
     if (!url || typeof url !== 'string') return res.status(400).end();
-    // Only allow known safe exercise GIF domains
     const allowed = ['fitnessprogramer.com', 'wger.de', 'cdn.jsdelivr.net', 'raw.githubusercontent.com'];
     let hostname;
     try { hostname = new URL(url).hostname; } catch { return res.status(400).end(); }
@@ -1064,12 +1062,14 @@ app.post('/api/profile/:userId/upload-image', upload.single('image'), async (req
     try {
         if (!req.file) return res.status(400).json({ error: 'No image uploaded' });
 
-        const baseUrl = 'http://localhost:3001';
+        const baseUrl = process.env.BASE_URL || 'https://trainova-api.up.railway.app';
         const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
 
         const user = await User.findById(req.params.userId);
         if (user?.profileImage) {
-            const oldPath = path.join(__dirname, user.profileImage.replace(baseUrl, ''));
+            // Extract only the filename/path part after /uploads/
+            const oldFilename = user.profileImage.replace(/^.*\/uploads\//, '');
+            const oldPath = path.join(__dirname, 'uploads', oldFilename);
             if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
         }
 
@@ -1086,7 +1086,8 @@ app.post('/api/profile/:userId/image', async (req, res) => {
         const filepath = path.join(__dirname, 'uploads', filename);
         fs.writeFileSync(filepath, Buffer.from(base64Data, 'base64'));
 
-        const imageUrl = `http://localhost:3001/uploads/${filename}`;
+        const baseUrl = process.env.BASE_URL || 'https://trainova-api.up.railway.app';
+        const imageUrl = `${baseUrl}/uploads/${filename}`;
         const updatedUser = await User.findByIdAndUpdate(req.params.userId, { profileImage: imageUrl }, { new: true }).select('-password');
         res.json({ success: true, user: updatedUser, imageUrl });
     } catch (e) { res.status(500).json({ error: e.message }); }
@@ -1096,7 +1097,9 @@ app.delete('/api/profile/:userId/image', async (req, res) => {
     try {
         const user = await User.findById(req.params.userId);
         if (user?.profileImage) {
-            const oldPath = path.join(__dirname, user.profileImage.replace('http://localhost:3001', ''));
+            // Extract only the filename/path part after /uploads/
+            const oldFilename = user.profileImage.replace(/^.*\/uploads\//, '');
+            const oldPath = path.join(__dirname, 'uploads', oldFilename);
             if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
         }
         const updatedUser = await User.findByIdAndUpdate(req.params.userId, { profileImage: null }, { new: true }).select('-password');
