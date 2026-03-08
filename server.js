@@ -5,6 +5,21 @@ const bcrypt = require('bcrypt');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+// ── Cloudinary config (set these 3 vars in Railway environment variables) ──
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key:    process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const isCloudinaryConfigured = !!(
+    process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET
+);
 
 const app = express();
 
@@ -25,7 +40,7 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '10mb' }));
-app.use('/uploads', express.static('uploads'));
+// Profile images now served from Cloudinary — no local static needed
 
 app.get('/api/gif-proxy', (req, res) => {
     const url = req.query.url;
@@ -81,22 +96,25 @@ app.get('/api/gif-proxy', async (req, res) => {
 
 
 
-const uploadDir = './uploads';
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
-    }
+// ── Multer → Cloudinary storage ──
+const cloudinaryStorage = new CloudinaryStorage({
+    cloudinary,
+    params: {
+        folder: 'trainova/profiles',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+        transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face', quality: 'auto' }],
+        public_id: (req, file) => `profile-${req.params?.userId || Date.now()}-${Date.now()}`,
+    },
 });
 
+// Fallback: memory storage when Cloudinary not configured
+const memStorage = multer.memoryStorage();
+
 const upload = multer({
-    storage,
+    storage: isCloudinaryConfigured ? cloudinaryStorage : memStorage,
     limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
-        const allowed = /jpeg|jpg|png|gif/;
+        const allowed = /jpeg|jpg|png|gif|webp/;
         if (allowed.test(path.extname(file.originalname).toLowerCase()) && allowed.test(file.mimetype)) {
             cb(null, true);
         } else {
@@ -1027,10 +1045,21 @@ app.delete('/api/profile/:userId/delete-account', async (req, res) => {
         await WorkoutPlan.deleteMany({ user_id: req.params.userId });
         await WorkoutHistory.deleteMany({ user_id: req.params.userId });
 
-        // Delete profile image file if exists
-        if (user.profileImage && user.profileImage.startsWith('/uploads/')) {
-            const filePath = '.' + user.profileImage;
-            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        // Delete profile image (Cloudinary or local)
+        if (user.profileImage) {
+            if (isCloudinaryConfigured && user.profileImage.includes('cloudinary.com')) {
+                try {
+                    const urlParts = user.profileImage.split('/upload/');
+                    if (urlParts[1]) {
+                        const publicIdWithExt = urlParts[1].replace(/^v\d+\//, '');
+                        const publicId = publicIdWithExt.replace(/\.[^.]+$/, '');
+                        await cloudinary.uploader.destroy(publicId);
+                    }
+                } catch (_) { /* ignore */ }
+            } else if (user.profileImage.startsWith('/uploads/')) {
+                const filePath = '.' + user.profileImage;
+                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+            }
         }
 
         await User.findByIdAndDelete(req.params.userId);
@@ -1063,18 +1092,40 @@ app.post('/api/profile/:userId/upload-image', upload.single('image'), async (req
     try {
         if (!req.file) return res.status(400).json({ error: 'No image uploaded' });
 
-        const baseUrl = process.env.BASE_URL || 'https://trainova-api.up.railway.app';
-        const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
+        let imageUrl;
 
-        const user = await User.findById(req.params.userId);
-        if (user?.profileImage) {
-            // Extract only the filename/path part after /uploads/
-            const oldFilename = user.profileImage.replace(/^.*\/uploads\//, '');
-            const oldPath = path.join(__dirname, 'uploads', oldFilename);
-            if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+        if (isCloudinaryConfigured) {
+            // Cloudinary: file.path = secure_url, file.filename = public_id
+            imageUrl = req.file.path;
+
+            // Delete old Cloudinary image if exists
+            const user = await User.findById(req.params.userId);
+            if (user?.profileImage && user.profileImage.includes('cloudinary.com')) {
+                try {
+                    // Extract public_id from URL
+                    const parts = user.profileImage.split('/');
+                    const filenameWithExt = parts[parts.length - 1];
+                    const folderPart = parts[parts.length - 2];
+                    const publicId = `trainova/profiles/${folderPart === 'profiles' ? filenameWithExt.split('.')[0] : filenameWithExt.split('.')[0]}`;
+                    await cloudinary.uploader.destroy(publicId);
+                } catch (_) { /* ignore delete errors */ }
+            }
+        } else {
+            // Fallback: save to local uploads (dev only)
+            const filename = `profile-${req.params.userId}-${Date.now()}.jpg`;
+            const uploadDir = path.join(__dirname, 'uploads');
+            if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+            fs.writeFileSync(path.join(uploadDir, filename), req.file.buffer);
+            const baseUrl = process.env.BASE_URL || 'https://trainova-api.up.railway.app';
+            imageUrl = `${baseUrl}/uploads/${filename}`;
         }
 
-        const updatedUser = await User.findByIdAndUpdate(req.params.userId, { profileImage: imageUrl }, { new: true }).select('-password');
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.userId,
+            { profileImage: imageUrl },
+            { new: true }
+        ).select('-password');
+
         res.json({ success: true, user: updatedUser, imageUrl });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -1082,14 +1133,49 @@ app.post('/api/profile/:userId/upload-image', upload.single('image'), async (req
 app.post('/api/profile/:userId/image', async (req, res) => {
     try {
         const { imageData } = req.body;
-        const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
-        const filename = `profile-${req.params.userId}-${Date.now()}.jpg`;
-        const filepath = path.join(__dirname, 'uploads', filename);
-        fs.writeFileSync(filepath, Buffer.from(base64Data, 'base64'));
+        if (!imageData) return res.status(400).json({ error: 'No image data provided' });
 
-        const baseUrl = process.env.BASE_URL || 'https://trainova-api.up.railway.app';
-        const imageUrl = `${baseUrl}/uploads/${filename}`;
-        const updatedUser = await User.findByIdAndUpdate(req.params.userId, { profileImage: imageUrl }, { new: true }).select('-password');
+        let imageUrl;
+
+        if (isCloudinaryConfigured) {
+            // Upload base64 directly to Cloudinary
+            const result = await cloudinary.uploader.upload(imageData, {
+                folder: 'trainova/profiles',
+                public_id: `profile-${req.params.userId}-${Date.now()}`,
+                transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face', quality: 'auto' }],
+                overwrite: true,
+            });
+            imageUrl = result.secure_url;
+
+            // Delete old image
+            const user = await User.findById(req.params.userId);
+            if (user?.profileImage && user.profileImage.includes('cloudinary.com')) {
+                try {
+                    const urlParts = user.profileImage.split('/upload/');
+                    if (urlParts[1]) {
+                        const publicIdWithExt = urlParts[1].replace(/^v\d+\//, '');
+                        const publicId = publicIdWithExt.replace(/\.[^.]+$/, '');
+                        await cloudinary.uploader.destroy(publicId);
+                    }
+                } catch (_) { /* ignore */ }
+            }
+        } else {
+            // Fallback local
+            const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
+            const filename = `profile-${req.params.userId}-${Date.now()}.jpg`;
+            const uploadDir = path.join(__dirname, 'uploads');
+            if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+            fs.writeFileSync(path.join(uploadDir, filename), Buffer.from(base64Data, 'base64'));
+            const baseUrl = process.env.BASE_URL || 'https://trainova-api.up.railway.app';
+            imageUrl = `${baseUrl}/uploads/${filename}`;
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.userId,
+            { profileImage: imageUrl },
+            { new: true }
+        ).select('-password');
+
         res.json({ success: true, user: updatedUser, imageUrl });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -1098,10 +1184,20 @@ app.delete('/api/profile/:userId/image', async (req, res) => {
     try {
         const user = await User.findById(req.params.userId);
         if (user?.profileImage) {
-            // Extract only the filename/path part after /uploads/
-            const oldFilename = user.profileImage.replace(/^.*\/uploads\//, '');
-            const oldPath = path.join(__dirname, 'uploads', oldFilename);
-            if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+            if (isCloudinaryConfigured && user.profileImage.includes('cloudinary.com')) {
+                try {
+                    const urlParts = user.profileImage.split('/upload/');
+                    if (urlParts[1]) {
+                        const publicIdWithExt = urlParts[1].replace(/^v\d+\//, '');
+                        const publicId = publicIdWithExt.replace(/\.[^.]+$/, '');
+                        await cloudinary.uploader.destroy(publicId);
+                    }
+                } catch (_) { /* ignore */ }
+            } else if (user.profileImage.includes('/uploads/')) {
+                const oldFilename = user.profileImage.replace(/^.*\/uploads\//, '');
+                const oldPath = path.join(__dirname, 'uploads', oldFilename);
+                if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+            }
         }
         const updatedUser = await User.findByIdAndUpdate(req.params.userId, { profileImage: null }, { new: true }).select('-password');
         res.json({ success: true, user: updatedUser });
@@ -1584,142 +1680,10 @@ async function updateStreak(userId) {
     await User.findByIdAndUpdate(userId, { current_streak: newStreak });
 }
 
-// ==================== EXERCISE NAME MAP ====================
-
-const exerciseNameMap = {
-    'Crunch':                    { name: 'Ab Crunch',                       name_ar: 'تمرين انقباض البطن' },
-    'Leg Raises':                { name: 'Hanging Leg Raise',               name_ar: 'رفع الأرجل المعلق' },
-    'Plank':                     { name: 'Forearm Plank Hold',              name_ar: 'تثبيت البلانك على الساعدين' },
-    'Russian Twist':             { name: 'Oblique Rotational Twist',        name_ar: 'تدوير العضلة المائلة' },
-    'Bicycle Crunch':            { name: 'Cross-Body Crunch',               name_ar: 'انقباض البطن المتقاطع' },
-    'Heel Touch':                { name: 'Lateral Oblique Reach',           name_ar: 'مد العضلة المائلة الجانبي' },
-    'Mountain Climber':          { name: 'Dynamic Plank Drive',             name_ar: 'دفع البلانك الديناميكي' },
-    'Hollow Hold':               { name: 'Hollow Body Hold',                name_ar: 'تثبيت الجسم المجوف' },
-    'Dead Bug':                  { name: 'Core Stability Extension',        name_ar: 'تمرين تثبيت الجذع' },
-    'V-Ups':                     { name: 'Full Body V-Raise',               name_ar: 'الرفع الكامل على شكل V' },
-    'Side Plank':                { name: 'Lateral Core Plank',              name_ar: 'بلانك الجذع الجانبي' },
-    'Flutter Kicks':             { name: 'Low Leg Flutter',                 name_ar: 'رفرفة الأرجل المنخفضة' },
-    'Bodyweight Squat':          { name: 'Deep Air Squat',                  name_ar: 'القرفصاء العميقة' },
-    'Forward Lunge':             { name: 'Forward Power Lunge',             name_ar: 'الاندفاع الأمامي القوي' },
-    'Reverse Lunge':             { name: 'Reverse Step Lunge',              name_ar: 'الاندفاع الخطوي الخلفي' },
-    'Calf Raises':               { name: 'Standing Calf Raise',             name_ar: 'رفع الكعب الواقف' },
-    'Wall Sit':                  { name: 'Isometric Wall Squat',            name_ar: 'قرفصاء الحائط الثابتة' },
-    'Glute Bridge':              { name: 'Glute Bridge Press',              name_ar: 'ضغط الجسر الخلفي' },
-    'Single Leg Glute Bridge':   { name: 'Single Leg Hip Thrust',           name_ar: 'دفع الورك أحادي الساق' },
-    'Sumo Squat':                { name: 'Wide Stance Power Squat',         name_ar: 'القرفصاء القوية الواسعة' },
-    'Step Up':                   { name: 'Elevated Step Drive',             name_ar: 'الدفع على المرتفع' },
-    'Lateral Lunge':             { name: 'Side Squat Stretch',              name_ar: 'القرفصاء الجانبية الممتدة' },
-    'Jump Squat':                { name: 'Explosive Jump Squat',            name_ar: 'القرفصاء التفجيرية' },
-    'Donkey Kick':               { name: 'Glute Kickback',                  name_ar: 'رفع الساق الخلفي' },
-    'Push Up':                   { name: 'Standard Push-Up',                name_ar: 'تمرين الضغط الأساسي' },
-    'Wide Push Up':              { name: 'Wide Grip Push-Up',               name_ar: 'الضغط بالقبضة الواسعة' },
-    'Diamond Push Up':           { name: 'Close Grip Tricep Push-Up',       name_ar: 'ضغط الترايسبس الضيق' },
-    'Incline Push Up':           { name: 'Elevated Push-Up',                name_ar: 'الضغط على المرتفع' },
-    'Decline Push Up':           { name: 'Feet-Elevated Push-Up',           name_ar: 'الضغط برفع القدمين' },
-    'Tricep Dips':               { name: 'Bench Tricep Dip',                name_ar: 'غطس الترايسبس على المقعد' },
-    'Burpee':                    { name: 'Full Burpee Complex',             name_ar: 'تمرين البيربي الكامل' },
-    'Pike Push Up':              { name: 'Inverted V Press',                name_ar: 'الضغط المقلوب على شكل V' },
-    'Plank to Push Up':          { name: 'Plank-to-Press Transition',       name_ar: 'الانتقال من البلانك للضغط' },
-    'Superman Push Up':          { name: 'Superman Press-Up',               name_ar: 'ضغط السوبرمان المتقدم' },
-    'Jump Rope (Simulated)':     { name: 'Cardio Jump Drill',               name_ar: 'تدريب القفز الكارديو' },
-    'Inchworm':                  { name: 'Walking Plank Reach',             name_ar: 'المشي بالبلانك للأمام' },
-    'Superman':                  { name: 'Prone Back Extension Lift',       name_ar: 'رفع مد الظهر على البطن' },
-    'Reverse Snow Angel':        { name: 'Prone Shoulder Arc',              name_ar: 'قوس الكتف على البطن' },
-    'Back Extension':            { name: 'Lumbar Extension',                name_ar: 'مد أسفل الظهر' },
-    'Bird Dog':                  { name: 'Contralateral Balance Extension', name_ar: 'تمرين التوازن المتقاطع' },
-    'Prone Y Raise':             { name: 'Prone Y-Trap Raise',              name_ar: 'رفع الشبكي على شكل Y' },
-    'Prone T Raise':             { name: 'Prone T-Rear Delt Raise',         name_ar: 'رفع الدالية الخلفية على شكل T' },
-    'Cat-Cow Stretch':           { name: 'Spinal Mobility Flow',            name_ar: 'تمرين حركية العمود الفقري' },
-    "Child's Pose Pull":         { name: 'Active Spinal Stretch',           name_ar: 'الإطالة النشطة للعمود الفقري' },
-    'Table Row (Inverted Row)':  { name: 'Inverted Bodyweight Row',         name_ar: 'الشد العكسي بوزن الجسم' },
-    'Door Frame Row':            { name: 'Isometric Doorway Pull',          name_ar: 'الشد الثابت على إطار الباب' },
-    'Prone Cobra':               { name: 'Prone Spinal Extension',          name_ar: 'مد العمود الفقري على البطن' },
-    'Swimming (Floor)':          { name: 'Prone Alternating Raise',         name_ar: 'الرفع المتناوب على البطن' },
-    'Wall Angel':                { name: 'Wall Shoulder Slide',             name_ar: 'انزلاق الكتف على الحائط' },
-    'Lat Stretch (Doorway)':     { name: 'Doorway Lat Mobilizer',           name_ar: 'تحريك العضلة العريضة بالباب' },
-    'Thoracic Rotation':         { name: 'Thoracic Spine Mobilization',     name_ar: 'تحريك العمود الفقري الصدري' },
-    'Scapular Push Up':          { name: 'Scapular Protraction Press',      name_ar: 'ضغط تقدُّم لوح الكتف' },
-    'Good Morning (Bodyweight)': { name: 'Hip Hinge Lower Back Pull',       name_ar: 'ثني الورك لأسفل الظهر' },
-    'Reverse Hyperextension':    { name: 'Prone Glute-Back Extension',      name_ar: 'مد الأرداف والظهر على البطن' },
-    'Wall Push Up':              { name: 'Vertical Wall Press',             name_ar: 'الضغط الرأسي على الحائط' },
-    // Arabic legacy names
-    'سوبرمان':                   { name: 'Prone Back Extension Lift',       name_ar: 'رفع مد الظهر على البطن' },
-    'طائر الكلب':                { name: 'Contralateral Balance Extension', name_ar: 'تمرين التوازن المتقاطع' },
-    'تمرين القطة والبقرة':       { name: 'Spinal Mobility Flow',            name_ar: 'تمرين حركية العمود الفقري' },
-    'ركلة الحمار':               { name: 'Glute Kickback',                  name_ar: 'رفع الساق الخلفي' },
-    'الخنفساء الميتة':           { name: 'Core Stability Extension',        name_ar: 'تمرين تثبيت الجذع' },
-    'دودة الأرض':                { name: 'Walking Plank Reach',             name_ar: 'المشي بالبلانك للأمام' },
-    'ملاك الثلج العكسي':         { name: 'Prone Shoulder Arc',              name_ar: 'قوس الكتف على البطن' },
-    'ملاك الحائط':               { name: 'Wall Shoulder Slide',             name_ar: 'انزلاق الكتف على الحائط' },
-    'صباح الخير بوزن الجسم':     { name: 'Hip Hinge Lower Back Pull',       name_ar: 'ثني الورك لأسفل الظهر' },
-    'رفع الأرجل':                { name: 'Hanging Leg Raise',               name_ar: 'رفع الأرجل المعلق' },
-    'اللف الروسي':               { name: 'Oblique Rotational Twist',        name_ar: 'تدوير العضلة المائلة' },
-    'تمرين الدراجة':             { name: 'Cross-Body Crunch',               name_ar: 'انقباض البطن المتقاطع' },
-    'تسلق الجبل':                { name: 'Dynamic Plank Drive',             name_ar: 'دفع البلانك الديناميكي' },
-    'رفع الحوض':                 { name: 'Glute Bridge Press',              name_ar: 'ضغط الجسر الخلفي' },
-};
-
-// ==================== AUTO-MIGRATE ON STARTUP ====================
-
-async function migrateExerciseNames() {
-    try {
-        // Wait for DB to be ready
-        if (mongoose.connection.readyState !== 1) return;
-
-        let plansUpdated = 0;
-        let exercisesUpdated = 0;
-        let historyUpdated = 0;
-
-        // ── Migrate WorkoutPlan exercises ──
-        const plans = await WorkoutPlan.find({});
-        for (const plan of plans) {
-            let dirty = false;
-            for (const day of plan.days) {
-                for (const ex of day.exercises) {
-                    const m = exerciseNameMap[ex.name] || exerciseNameMap[ex.name_ar];
-                    if (m) {
-                        ex.name    = m.name;
-                        ex.name_ar = m.name_ar;
-                        dirty = true;
-                        exercisesUpdated++;
-                    }
-                }
-            }
-            if (dirty) {
-                plan.markModified('days');
-                await plan.save();
-                plansUpdated++;
-            }
-        }
-
-        // ── Migrate WorkoutHistory records ──
-        const history = await WorkoutHistory.find({});
-        for (const doc of history) {
-            const m = exerciseNameMap[doc.exercise_name] || exerciseNameMap[doc.exercise_name_ar];
-            if (m) {
-                doc.exercise_name    = m.name;
-                doc.exercise_name_ar = m.name_ar;
-                await doc.save();
-                historyUpdated++;
-            }
-        }
-
-        if (exercisesUpdated > 0 || historyUpdated > 0) {
-            console.log(`✅ Exercise migration: ${plansUpdated} plans, ${exercisesUpdated} exercises, ${historyUpdated} history records updated`);
-        } else {
-            console.log('✅ Exercise migration: all names already up to date');
-        }
-    } catch (err) {
-        console.error('⚠️  Exercise migration error:', err.message);
-    }
-}
-
 // ==================== START SERVER ====================
 
 const PORT = 8080;
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
     console.log(`🚀 Trainova Server running on http://localhost:${PORT}`);
     console.log(`🔗 Test: http://localhost:${PORT}/api/test`);
-
-    setTimeout(migrateExerciseNames, 3000);
 });
