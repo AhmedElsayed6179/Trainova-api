@@ -142,6 +142,7 @@ const workoutHistorySchema = new mongoose.Schema({
     user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     exercise_id: { type: String, required: true },
     exercise_name: { type: String, required: true },
+    exercise_name_ar: { type: String },
     category: { type: String, required: true },
     sets: { type: Number, required: true },
     reps: { type: mongoose.Schema.Types.Mixed, required: true },
@@ -1243,6 +1244,7 @@ app.post('/api/workout/day/:userId/:dayNumber/exercise/:exerciseId', async (req,
                 user_id: userId,
                 exercise_id: exerciseId,
                 exercise_name: exercise.name,
+                exercise_name_ar: exercise.name_ar || exercise.name,
                 category: exercise.category,
                 sets: exercise.sets,
                 reps: exercise.reps,
@@ -1294,6 +1296,7 @@ app.post('/api/workout/day/:userId/:dayNumber/complete', async (req, res) => {
                         user_id: userId,
                         exercise_id: e.id,
                         exercise_name: e.name,
+                        exercise_name_ar: e.name_ar || e.name,
                         category: e.category,
                         sets: e.sets,
                         reps: e.reps,
@@ -1525,6 +1528,7 @@ app.get('/api/workout/today/:userId', async (req, res) => {
                 exercises: currentDay.exercises.map(e => ({
                     exercise_id: e.id,
                     exercise_name: e.name,
+                    exercise_name_ar: e.name_ar || e.name,
                     sets: e.sets,
                     reps: e.reps,
                     completed: e.completed
@@ -1541,6 +1545,7 @@ app.get('/api/workout/today/:userId', async (req, res) => {
             exercises: todayDay.exercises.map(e => ({
                 exercise_id: e.id,
                 exercise_name: e.name,
+                exercise_name_ar: e.name_ar || e.name,
                 sets: e.sets,
                 reps: e.reps,
                 completed: e.completed
