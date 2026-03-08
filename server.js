@@ -107,7 +107,7 @@ const upload = multer({
     }
 });
 
-const MONGO_URL = 'mongodb://mongo:ZplTWpmDIZrqefbtPwUayAADXAuqcBek@tramway.proxy.rlwy.net:55592/trainova?authSource=admin';
+const MONGO_URL = process.env.MONGO_URL || 'mongodb://mongo:CsEpNPhRPbjNqHkOxcovGDgPdXHzzuqq@gondola.proxy.rlwy.net:28397/trainova?authSource=admin';
 
 let isDbConnected = false;
 
