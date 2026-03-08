@@ -1584,6 +1584,131 @@ async function updateStreak(userId) {
     await User.findByIdAndUpdate(userId, { current_streak: newStreak });
 }
 
+// ==================== EXERCISE NAME MIGRATION ====================
+// Maps old names (en + ar) → new professional names
+const exerciseNameMap = {
+    // English old → new
+    'Crunch': { name: 'Ab Crunch', name_ar: 'تمرين انقباض البطن' },
+    'Leg Raises': { name: 'Hanging Leg Raise', name_ar: 'رفع الأرجل المعلق' },
+    'Plank': { name: 'Forearm Plank Hold', name_ar: 'تثبيت البلانك على الساعدين' },
+    'Russian Twist': { name: 'Oblique Rotational Twist', name_ar: 'تدوير العضلة المائلة' },
+    'Bicycle Crunch': { name: 'Cross-Body Crunch', name_ar: 'انقباض البطن المتقاطع' },
+    'Heel Touch': { name: 'Lateral Oblique Reach', name_ar: 'مد العضلة المائلة الجانبي' },
+    'Mountain Climber': { name: 'Dynamic Plank Drive', name_ar: 'دفع البلانك الديناميكي' },
+    'Hollow Hold': { name: 'Hollow Body Hold', name_ar: 'تثبيت الجسم المجوف' },
+    'Dead Bug': { name: 'Core Stability Extension', name_ar: 'تمرين تثبيت الجذع' },
+    'V-Ups': { name: 'Full Body V-Raise', name_ar: 'الرفع الكامل على شكل V' },
+    'Side Plank': { name: 'Lateral Core Plank', name_ar: 'بلانك الجذع الجانبي' },
+    'Flutter Kicks': { name: 'Low Leg Flutter', name_ar: 'رفرفة الأرجل المنخفضة' },
+    'Bodyweight Squat': { name: 'Deep Air Squat', name_ar: 'القرفصاء العميقة' },
+    'Forward Lunge': { name: 'Forward Power Lunge', name_ar: 'الاندفاع الأمامي القوي' },
+    'Reverse Lunge': { name: 'Reverse Step Lunge', name_ar: 'الاندفاع الخطوي الخلفي' },
+    'Calf Raises': { name: 'Standing Calf Raise', name_ar: 'رفع الكعب الواقف' },
+    'Wall Sit': { name: 'Isometric Wall Squat', name_ar: 'قرفصاء الحائط الثابتة' },
+    'Glute Bridge': { name: 'Glute Bridge Press', name_ar: 'ضغط الجسر الخلفي' },
+    'Single Leg Glute Bridge': { name: 'Single Leg Hip Thrust', name_ar: 'دفع الورك أحادي الساق' },
+    'Sumo Squat': { name: 'Wide Stance Power Squat', name_ar: 'القرفصاء القوية الواسعة' },
+    'Step Up': { name: 'Elevated Step Drive', name_ar: 'الدفع على المرتفع' },
+    'Lateral Lunge': { name: 'Side Squat Stretch', name_ar: 'القرفصاء الجانبية الممتدة' },
+    'Jump Squat': { name: 'Explosive Jump Squat', name_ar: 'القرفصاء التفجيرية' },
+    'Donkey Kick': { name: 'Glute Kickback', name_ar: 'رفع الساق الخلفي' },
+    'Push Up': { name: 'Standard Push-Up', name_ar: 'تمرين الضغط الأساسي' },
+    'Wide Push Up': { name: 'Wide Grip Push-Up', name_ar: 'الضغط بالقبضة الواسعة' },
+    'Diamond Push Up': { name: 'Close Grip Tricep Push-Up', name_ar: 'ضغط الترايسبس الضيق' },
+    'Incline Push Up': { name: 'Elevated Push-Up', name_ar: 'الضغط على المرتفع' },
+    'Decline Push Up': { name: 'Feet-Elevated Push-Up', name_ar: 'الضغط برفع القدمين' },
+    'Tricep Dips': { name: 'Bench Tricep Dip', name_ar: 'غطس الترايسبس على المقعد' },
+    'Burpee': { name: 'Full Burpee Complex', name_ar: 'تمرين البيربي الكامل' },
+    'Pike Push Up': { name: 'Inverted V Press', name_ar: 'الضغط المقلوب على شكل V' },
+    'Plank to Push Up': { name: 'Plank-to-Press Transition', name_ar: 'الانتقال من البلانك للضغط' },
+    'Superman Push Up': { name: 'Superman Press-Up', name_ar: 'ضغط السوبرمان المتقدم' },
+    'Jump Rope (Simulated)': { name: 'Cardio Jump Drill', name_ar: 'تدريب القفز الكارديو' },
+    'Inchworm': { name: 'Walking Plank Reach', name_ar: 'المشي بالبلانك للأمام' },
+    'Superman': { name: 'Prone Back Extension Lift', name_ar: 'رفع مد الظهر على البطن' },
+    'Reverse Snow Angel': { name: 'Prone Shoulder Arc', name_ar: 'قوس الكتف على البطن' },
+    'Back Extension': { name: 'Lumbar Extension', name_ar: 'مد أسفل الظهر' },
+    'Bird Dog': { name: 'Contralateral Balance Extension', name_ar: 'تمرين التوازن المتقاطع' },
+    'Prone Y Raise': { name: 'Prone Y-Trap Raise', name_ar: 'رفع الشبكي على شكل Y' },
+    'Prone T Raise': { name: 'Prone T-Rear Delt Raise', name_ar: 'رفع الدالية الخلفية على شكل T' },
+    'Cat-Cow Stretch': { name: 'Spinal Mobility Flow', name_ar: 'تمرين حركية العمود الفقري' },
+    "Child's Pose Pull": { name: 'Active Spinal Stretch', name_ar: 'الإطالة النشطة للعمود الفقري' },
+    'Table Row (Inverted Row)': { name: 'Inverted Bodyweight Row', name_ar: 'الشد العكسي بوزن الجسم' },
+    'Door Frame Row': { name: 'Isometric Doorway Pull', name_ar: 'الشد الثابت على إطار الباب' },
+    'Prone Cobra': { name: 'Prone Spinal Extension', name_ar: 'مد العمود الفقري على البطن' },
+    'Swimming (Floor)': { name: 'Prone Alternating Raise', name_ar: 'الرفع المتناوب على البطن' },
+    'Wall Angel': { name: 'Wall Shoulder Slide', name_ar: 'انزلاق الكتف على الحائط' },
+    'Lat Stretch (Doorway)': { name: 'Doorway Lat Mobilizer', name_ar: 'تحريك العضلة العريضة بالباب' },
+    'Thoracic Rotation': { name: 'Thoracic Spine Mobilization', name_ar: 'تحريك العمود الفقري الصدري' },
+    'Scapular Push Up': { name: 'Scapular Protraction Press', name_ar: 'ضغط تقدُّم لوح الكتف' },
+    'Good Morning (Bodyweight)': { name: 'Hip Hinge Lower Back Pull', name_ar: 'ثني الورك لأسفل الظهر' },
+    'Reverse Hyperextension': { name: 'Prone Glute-Back Extension', name_ar: 'مد الأرداف والظهر على البطن' },
+    'Wall Push Up': { name: 'Vertical Wall Press', name_ar: 'الضغط الرأسي على الحائط' },
+
+    // Arabic old → catch any that slipped through
+    'سوبرمان': { name: 'Prone Back Extension Lift', name_ar: 'رفع مد الظهر على البطن' },
+    'طائر الكلب': { name: 'Contralateral Balance Extension', name_ar: 'تمرين التوازن المتقاطع' },
+    'تمرين القطة والبقرة': { name: 'Spinal Mobility Flow', name_ar: 'تمرين حركية العمود الفقري' },
+    'ركلة الحمار': { name: 'Glute Kickback', name_ar: 'رفع الساق الخلفي' },
+    'الخنفساء الميتة': { name: 'Core Stability Extension', name_ar: 'تمرين تثبيت الجذع' },
+    'دودة الأرض': { name: 'Walking Plank Reach', name_ar: 'المشي بالبلانك للأمام' },
+    'ملاك الثلج العكسي': { name: 'Prone Shoulder Arc', name_ar: 'قوس الكتف على البطن' },
+    'ملاك الحائط': { name: 'Wall Shoulder Slide', name_ar: 'انزلاق الكتف على الحائط' },
+    'صباح الخير بوزن الجسم': { name: 'Hip Hinge Lower Back Pull', name_ar: 'ثني الورك لأسفل الظهر' },
+};
+
+// POST /api/migrate-exercise-names  — run once to update all stored plans
+app.post('/api/migrate-exercise-names', async (req, res) => {
+    try {
+        const plans = await WorkoutPlan.find({});
+        let totalUpdated = 0;
+
+        for (const plan of plans) {
+            let planDirty = false;
+
+            for (const day of plan.days) {
+                for (const ex of day.exercises) {
+                    const mapping = exerciseNameMap[ex.name] || exerciseNameMap[ex.name_ar];
+                    if (mapping) {
+                        ex.name = mapping.name;
+                        ex.name_ar = mapping.name_ar;
+                        planDirty = true;
+                        totalUpdated++;
+                    }
+                }
+            }
+
+            if (planDirty) {
+                plan.markModified('days');
+                await plan.save();
+            }
+        }
+
+        // Also migrate WorkoutHistory records
+        const historyDocs = await WorkoutHistory.find({});
+        let historyUpdated = 0;
+
+        for (const doc of historyDocs) {
+            const mapping = exerciseNameMap[doc.exercise_name] || exerciseNameMap[doc.exercise_name_ar];
+            if (mapping) {
+                doc.exercise_name = mapping.name;
+                doc.exercise_name_ar = mapping.name_ar;
+                await doc.save();
+                historyUpdated++;
+            }
+        }
+
+        res.json({
+            success: true,
+            message: `Migration complete`,
+            plans_scanned: plans.length,
+            exercises_updated: totalUpdated,
+            history_updated: historyUpdated
+        });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
 // ==================== START SERVER ====================
 
 const PORT = 8080;
