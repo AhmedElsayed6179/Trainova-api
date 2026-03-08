@@ -9,7 +9,7 @@ const fs = require('fs');
 const app = express();
 
 const allowedOrigins = [
-    'http://localhost:4200'
+    'https://trainova.up.railway.app'
 ];
 
 app.use(cors({
