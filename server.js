@@ -5,8 +5,59 @@ const bcrypt = require('bcrypt');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+// ── Nodemailer transporter ──
+const emailTransporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS   // Gmail App Password (not regular password)
+    }
+});
+
+async function sendResetEmail(toEmail, resetUrl, lang = 'en') {
+    const isAr = lang === 'ar';
+    const subject = isAr ? 'إعادة تعيين كلمة المرور — Trainova' : 'Reset Your Password — Trainova';
+    const html = isAr ? `
+    <div dir="rtl" style="font-family:'Cairo',Arial,sans-serif;background:#0d0d0d;color:#fff;padding:40px 20px;max-width:600px;margin:0 auto;border-radius:12px;">
+      <div style="text-align:center;margin-bottom:32px;">
+        <div style="display:inline-flex;align-items:center;gap:10px;">
+          <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:22px;">⚡</div>
+          <span style="font-size:1.8rem;font-weight:900;letter-spacing:3px;color:#ffc107;">TRAINOVA</span>
+        </div>
+      </div>
+      <h2 style="color:#ffc107;margin-bottom:12px;">إعادة تعيين كلمة المرور</h2>
+      <p style="color:#ccc;line-height:1.8;">مرحباً،<br>تلقّينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك. انقر على الزر أدناه لإنشاء كلمة مرور جديدة.</p>
+      <div style="text-align:center;margin:32px 0;">
+        <a href="${resetUrl}" style="background:linear-gradient(135deg,#ffc107,#ff6b00);color:#000;text-decoration:none;padding:14px 36px;border-radius:8px;font-weight:700;font-size:1rem;display:inline-block;">إعادة تعيين كلمة المرور</a>
+      </div>
+      <p style="color:#888;font-size:0.85rem;line-height:1.7;">هذا الرابط صالح لمدة <strong style="color:#ffc107;">ساعة واحدة</strong> فقط.<br>إذا لم تطلب ذلك، تجاهل هذه الرسالة وسيبقى حسابك آمناً.</p>
+      <hr style="border:none;border-top:1px solid #222;margin:24px 0;">
+      <p style="color:#555;font-size:0.8rem;text-align:center;">© ${new Date().getFullYear()} Trainova. جميع الحقوق محفوظة.</p>
+    </div>` : `
+    <div style="font-family:'Rajdhani',Arial,sans-serif;background:#0d0d0d;color:#fff;padding:40px 20px;max-width:600px;margin:0 auto;border-radius:12px;">
+      <div style="text-align:center;margin-bottom:32px;">
+        <div style="display:inline-flex;align-items:center;gap:10px;">
+          <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:50%;width:48px;height:48px;display:inline-flex;align-items:center;justify-content:center;font-size:22px;">⚡</div>
+          <span style="font-size:1.8rem;font-weight:900;letter-spacing:3px;color:#ffc107;">TRAINOVA</span>
+        </div>
+      </div>
+      <h2 style="color:#ffc107;margin-bottom:12px;">Reset Your Password</h2>
+      <p style="color:#ccc;line-height:1.8;">Hi there,<br>We received a request to reset the password for your account. Click the button below to create a new password.</p>
+      <div style="text-align:center;margin:32px 0;">
+        <a href="${resetUrl}" style="background:linear-gradient(135deg,#ffc107,#ff6b00);color:#000;text-decoration:none;padding:14px 36px;border-radius:8px;font-weight:700;font-size:1rem;display:inline-block;">Reset My Password</a>
+      </div>
+      <p style="color:#888;font-size:0.85rem;line-height:1.7;">This link is valid for <strong style="color:#ffc107;">1 hour</strong> only.<br>If you didn't request this, you can safely ignore this email — your account remains secure.</p>
+      <hr style="border:none;border-top:1px solid #222;margin:24px 0;">
+      <p style="color:#555;font-size:0.8rem;text-align:center;">© ${new Date().getFullYear()} Trainova. All rights reserved.</p>
+    </div>`;
+
+    await emailTransporter.sendMail({ from: `"Trainova" <${process.env.EMAIL_USER}>`, to: toEmail, subject, html });
+}
 
 // ── Cloudinary config (set these 3 vars in Railway environment variables) ──
 cloudinary.config({
@@ -205,6 +256,16 @@ const workoutPlanSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 const WorkoutHistory = mongoose.model('WorkoutHistory', workoutHistorySchema);
 const WorkoutPlan = mongoose.model('WorkoutPlan', workoutPlanSchema);
+// ── Password Reset Token Schema ──
+const passwordResetTokenSchema = new mongoose.Schema({
+    userId:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    token:     { type: String, required: true, unique: true },
+    expiresAt: { type: Date, required: true },
+    used:      { type: Boolean, default: false }
+});
+passwordResetTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+const PasswordResetToken = mongoose.model('PasswordResetToken', passwordResetTokenSchema);
+
 
 // ==================== MIDDLEWARE ====================
 
@@ -979,9 +1040,10 @@ app.post('/api/check-user', async (req, res) => {
 
 app.post('/api/forgot-password', async (req, res) => {
     try {
-        // Accept identifier (username or email) — not just email
-        const identifier = req.body.identifier || req.body.email;
+        const identifier = (req.body.identifier || req.body.email || '').trim();
+        const lang = req.body.lang || 'en';  // 'ar' or 'en'
         if (!identifier) return res.status(400).json({ success: false, error: 'identifier_required' });
+
         const user = await User.findOne({
             $or: [
                 { email: identifier.toLowerCase() },
@@ -989,20 +1051,69 @@ app.post('/api/forgot-password', async (req, res) => {
             ]
         });
         if (!user) return res.json({ success: false, error: 'user_not_found' });
-        res.json({ success: true, resetToken: Buffer.from(`${user._id}:${Date.now()}`).toString('base64') });
-    } catch (e) { res.status(500).json({ success: false, error: 'server_error' }); }
+
+        // Invalidate any existing tokens for this user
+        await PasswordResetToken.deleteMany({ userId: user._id });
+
+        // Generate a secure random token
+        const rawToken = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+        await PasswordResetToken.create({ userId: user._id, token: rawToken, expiresAt });
+
+        const appUrl = process.env.APP_URL || 'https://trainova.up.railway.app';
+        const resetUrl = `${appUrl}/auth/reset-password?token=${rawToken}&lang=${lang}`;
+
+        // Send email
+        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            try {
+                await sendResetEmail(user.email, resetUrl, lang);
+            } catch (emailErr) {
+                console.error('Email send failed:', emailErr.message);
+                // Don't expose email errors to client
+            }
+        } else {
+            console.warn('EMAIL_USER / EMAIL_PASS not set — email not sent. Reset URL:', resetUrl);
+        }
+
+        // Always return success (don't leak whether email was sent)
+        res.json({ success: true });
+    } catch (e) {
+        console.error('forgot-password error:', e);
+        res.status(500).json({ success: false, error: 'server_error' });
+    }
 });
 
 app.post('/api/reset-password', async (req, res) => {
     try {
         const { token, newPassword } = req.body;
-        const userId = Buffer.from(token, 'base64').toString().split(':')[0];
-        const user = await User.findById(userId);
-        if (!user) return res.json({ success: false, error: 'invalid_token' });
+        if (!token || !newPassword) return res.status(400).json({ success: false, error: 'missing_fields' });
+
+        // Validate password strength server-side
+        const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(newPassword);
+        if (!strongPassword) return res.status(400).json({ success: false, error: 'weak_password' });
+
+        const resetToken = await PasswordResetToken.findOne({ token, used: false });
+        if (!resetToken) return res.json({ success: false, error: 'invalid_token' });
+        if (resetToken.expiresAt < new Date()) {
+            await PasswordResetToken.deleteOne({ _id: resetToken._id });
+            return res.json({ success: false, error: 'token_expired' });
+        }
+
+        const user = await User.findById(resetToken.userId);
+        if (!user) return res.json({ success: false, error: 'user_not_found' });
+
         user.password = await bcrypt.hash(newPassword, 10);
         await user.save();
+
+        // Mark token as used (then delete it)
+        await PasswordResetToken.deleteOne({ _id: resetToken._id });
+
         res.json({ success: true });
-    } catch (e) { res.status(500).json({ success: false, error: 'server_error' }); }
+    } catch (e) {
+        console.error('reset-password error:', e);
+        res.status(500).json({ success: false, error: 'server_error' });
+    }
 });
 
 app.post('/api/change-password/:userId', async (req, res) => {
