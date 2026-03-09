@@ -419,7 +419,8 @@ const passwordResetTokenSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     token: { type: String, required: true, unique: true },
     expiresAt: { type: Date, required: true },
-    used: { type: Boolean, default: false }
+    used: { type: Boolean, default: false },
+    sentAt: { type: Date, default: Date.now }
 });
 passwordResetTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 const PasswordResetToken = mongoose.model('PasswordResetToken', passwordResetTokenSchema);
@@ -1210,6 +1211,17 @@ app.post('/api/forgot-password', async (req, res) => {
         });
         if (!user) return res.json({ success: false, error: 'user_not_found' });
 
+        // ── Cooldown: 2 minutes between reset emails ──
+        const COOLDOWN_MS = 2 * 60 * 1000;
+        const lastToken = await PasswordResetToken.findOne({ userId: user._id }).sort({ sentAt: -1 });
+        if (lastToken) {
+            const elapsed = Date.now() - new Date(lastToken.sentAt).getTime();
+            if (elapsed < COOLDOWN_MS) {
+                const secondsLeft = Math.ceil((COOLDOWN_MS - elapsed) / 1000);
+                return res.json({ success: false, error: 'cooldown', secondsLeft });
+            }
+        }
+
         await PasswordResetToken.deleteMany({ userId: user._id });
 
         const rawToken = crypto.randomBytes(32).toString('hex');
@@ -1277,6 +1289,10 @@ app.post('/api/change-password/:userId', async (req, res) => {
 
         const isValid = await bcrypt.compare(currentPassword, user.password);
         if (!isValid) return res.json({ success: false, error: 'invalid_current_password' });
+
+        // ── Reject if new password is same as current ──
+        const isSamePassword = await bcrypt.compare(newPassword, user.password);
+        if (isSamePassword) return res.json({ success: false, error: 'same_password' });
 
         user.password = await bcrypt.hash(newPassword, 10);
         await user.save();
