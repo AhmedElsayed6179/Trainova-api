@@ -1058,7 +1058,7 @@ app.post('/api/forgot-password', async (req, res) => {
         await PasswordResetToken.deleteMany({ userId: user._id });
 
         const rawToken = crypto.randomBytes(32).toString('hex');
-        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
         await PasswordResetToken.create({ userId: user._id, token: rawToken, expiresAt });
 
@@ -1068,10 +1068,12 @@ app.post('/api/forgot-password', async (req, res) => {
         res.json({ success: true });
 
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            console.log('📧 Attempting to send email to:', user.email);
             sendResetEmail(user.email, resetUrl, lang)
-                .catch(err => console.error('Email send failed:', err.message));
+                .then(() => console.log('✅ Email sent successfully'))
+                .catch(err => console.error('❌ Email send failed:', err.message));
         } else {
-            console.warn('EMAIL_USER / EMAIL_PASS not set — Reset URL:', resetUrl);
+            console.warn('⚠️ EMAIL_USER / EMAIL_PASS not set');
         }
 
     } catch (e) {
