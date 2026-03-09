@@ -14,20 +14,22 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 dns.setDefaultResultOrder('ipv4first');
 
-function createTransporterIPv4() {
+function createTransporter() {
     return nodemailer.createTransport({
-        host: '74.125.130.108',
-        port: 465,
-        secure: true,
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: process.env.SMTP_PORT || 587,
+        secure: false,
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
         },
-        tls: { servername: 'smtp.gmail.com' }
+        tls: {
+            rejectUnauthorized: false
+        }
     });
 }
 
-const transporter = createTransporterIPv4();
+const transporter = createTransporter();
 
 async function sendResetEmail(toEmail, resetUrl, lang = 'en') {
     const isAr = lang === 'ar';
