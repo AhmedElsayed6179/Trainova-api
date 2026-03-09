@@ -11,18 +11,23 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 // ── Nodemailer transporter ──
+// Railway blocks IPv6 — force IPv4 by resolving smtp.gmail.com manually
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first'); // ← اجبر Node.js كله على IPv4
+
 const emailTransporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    family: 4,
+    port: 587,          // 587 + STARTTLS أكثر استقراراً من 465 على Railway
+    secure: false,      // false مع port 587 (STARTTLS)
+    requireTLS: true,   // اجبره يستخدم TLS
+    family: 4,          // IPv4 فقط
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
-    connectionTimeout: 5000,
-    greetingTimeout: 5000,
-    socketTimeout: 10000
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000
 });
 
 async function sendResetEmail(toEmail, resetUrl, lang = 'en') {
