@@ -224,7 +224,11 @@ const upload = multer({
     }
 });
 
-const MONGO_URL = process.env.MONGO_URL || 'mongodb://mongo:CsEpNPhRPbjNqHkOxcovGDgPdXHzzuqq@gondola.proxy.rlwy.net:28397/trainova?authSource=admin';
+const MONGO_URL = process.env.MONGO_URL;
+if (!MONGO_URL) {
+    console.error('❌ MONGO_URL environment variable is not set!');
+    process.exit(1);
+}
 
 let isDbConnected = false;
 
