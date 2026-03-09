@@ -6,11 +6,17 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 
 async function sendResetEmail(toEmail, resetUrl, lang = 'en') {
     const isAr = lang === 'ar';
@@ -49,14 +55,12 @@ async function sendResetEmail(toEmail, resetUrl, lang = 'en') {
       <p style="color:#555;font-size:0.8rem;text-align:center;">© ${new Date().getFullYear()} Trainova. All rights reserved.</p>
     </div>`;
 
-    const { error } = await resend.emails.send({
-        from: 'Trainova <onboarding@resend.dev>',
+    await transporter.sendMail({
+        from: `"Trainova" <${process.env.EMAIL_USER}>`,
         to: toEmail,
         subject,
         html
     });
-
-    if (error) throw new Error(error.message);
 }
 
 // ── Cloudinary config (set these 3 vars in Railway environment variables) ──
