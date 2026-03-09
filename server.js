@@ -6,74 +6,107 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
-const dns = require('dns');
-const net = require('net');
+const axios = require('axios');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-dns.setDefaultResultOrder('ipv4first');
-
-function createTransporter() {
-    return nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: process.env.SMTP_PORT || 587,
-        secure: false,
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-        },
-        tls: {
-            rejectUnauthorized: false
-        }
-    });
-}
-
-const transporter = createTransporter();
+// ── Brevo (Sendinblue) Email Service ──
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
 async function sendResetEmail(toEmail, resetUrl, lang = 'en') {
     const isAr = lang === 'ar';
     const subject = isAr ? 'إعادة تعيين كلمة المرور — Trainova' : 'Reset Your Password — Trainova';
-    const html = isAr ? `
-    <div dir="rtl" style="font-family:'Cairo',Arial,sans-serif;background:#0d0d0d;color:#fff;padding:40px 20px;max-width:600px;margin:0 auto;border-radius:12px;">
-      <div style="text-align:center;margin-bottom:32px;">
-        <div style="display:inline-flex;align-items:center;gap:10px;">
-          <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:22px;">⚡</div>
-          <span style="font-size:1.8rem;font-weight:900;letter-spacing:3px;color:#ffc107;">TRAINOVA</span>
-        </div>
-      </div>
-      <h2 style="color:#ffc107;margin-bottom:12px;">إعادة تعيين كلمة المرور</h2>
-      <p style="color:#ccc;line-height:1.8;">مرحباً،<br>تلقّينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك. انقر على الزر أدناه لإنشاء كلمة مرور جديدة.</p>
-      <div style="text-align:center;margin:32px 0;">
-        <a href="${resetUrl}" style="background:linear-gradient(135deg,#ffc107,#ff6b00);color:#000;text-decoration:none;padding:14px 36px;border-radius:8px;font-weight:700;font-size:1rem;display:inline-block;">إعادة تعيين كلمة المرور</a>
-      </div>
-      <p style="color:#888;font-size:0.85rem;line-height:1.7;">هذا الرابط صالح لمدة <strong style="color:#ffc107;">ساعة واحدة</strong> فقط.<br>إذا لم تطلب ذلك، تجاهل هذه الرسالة وسيبقى حسابك آمناً.</p>
-      <hr style="border:none;border-top:1px solid #222;margin:24px 0;">
-      <p style="color:#555;font-size:0.8rem;text-align:center;">© ${new Date().getFullYear()} Trainova. جميع الحقوق محفوظة.</p>
-    </div>` : `
-    <div style="font-family:'Rajdhani',Arial,sans-serif;background:#0d0d0d;color:#fff;padding:40px 20px;max-width:600px;margin:0 auto;border-radius:12px;">
-      <div style="text-align:center;margin-bottom:32px;">
-        <div style="display:inline-flex;align-items:center;gap:10px;">
-          <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:50%;width:48px;height:48px;display:inline-flex;align-items:center;justify-content:center;font-size:22px;">⚡</div>
-          <span style="font-size:1.8rem;font-weight:900;letter-spacing:3px;color:#ffc107;">TRAINOVA</span>
-        </div>
-      </div>
-      <h2 style="color:#ffc107;margin-bottom:12px;">Reset Your Password</h2>
-      <p style="color:#ccc;line-height:1.8;">Hi there,<br>We received a request to reset the password for your account. Click the button below to create a new password.</p>
-      <div style="text-align:center;margin:32px 0;">
-        <a href="${resetUrl}" style="background:linear-gradient(135deg,#ffc107,#ff6b00);color:#000;text-decoration:none;padding:14px 36px;border-radius:8px;font-weight:700;font-size:1rem;display:inline-block;">Reset My Password</a>
-      </div>
-      <p style="color:#888;font-size:0.85rem;line-height:1.7;">This link is valid for <strong style="color:#ffc107;">1 hour</strong> only.<br>If you didn't request this, you can safely ignore this email — your account remains secure.</p>
-      <hr style="border:none;border-top:1px solid #222;margin:24px 0;">
-      <p style="color:#555;font-size:0.8rem;text-align:center;">© ${new Date().getFullYear()} Trainova. All rights reserved.</p>
-    </div>`;
 
-    await transporter.sendMail({
-        from: `"Trainova" <${process.env.EMAIL_USER}>`,
-        to: toEmail,
+    const htmlAr = `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    </head>
+    <body style="margin:0;padding:0;background:#111;">
+    <div style="font-family:'Cairo',Arial,sans-serif;background:#0d0d0d;color:#fff;padding:48px 24px;max-width:580px;margin:32px auto;border-radius:16px;border:1px solid #1e1e1e;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+      <!-- Header -->
+      <div style="text-align:center;margin-bottom:36px;">
+        <div style="display:inline-flex;align-items:center;gap:12px;">
+          <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:50%;width:52px;height:52px;display:inline-flex;align-items:center;justify-content:center;font-size:24px;line-height:1;">⚡</div>
+          <span style="font-size:2rem;font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#ffc107,#ff9500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">TRAINOVA</span>
+        </div>
+        <div style="width:60px;height:3px;background:linear-gradient(135deg,#ffc107,#ff6b00);margin:16px auto 0;border-radius:2px;"></div>
+      </div>
+      <!-- Body -->
+      <h2 style="color:#ffc107;margin:0 0 16px;font-size:1.5rem;font-weight:700;">إعادة تعيين كلمة المرور</h2>
+      <p style="color:#bbb;line-height:1.9;margin:0 0 28px;font-size:1rem;">مرحباً،<br>تلقّينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك في Trainova.<br>انقر على الزر أدناه لإنشاء كلمة مرور جديدة.</p>
+      <!-- CTA Button -->
+      <div style="text-align:center;margin:32px 0;">
+        <a href="${resetUrl}" style="background:linear-gradient(135deg,#ffc107,#ff6b00);color:#000;text-decoration:none;padding:16px 44px;border-radius:10px;font-weight:900;font-size:1rem;display:inline-block;letter-spacing:1px;box-shadow:0 4px 16px rgba(255,193,7,0.35);">⚡ إعادة تعيين كلمة المرور</a>
+      </div>
+      <!-- Warning -->
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:16px 20px;margin:24px 0;">
+        <p style="color:#888;font-size:0.85rem;line-height:1.8;margin:0;">
+          ⏱ هذا الرابط صالح لمدة <strong style="color:#ffc107;">ساعة واحدة</strong> فقط.<br>
+          🔒 إذا لم تطلب ذلك، تجاهل هذه الرسالة وسيبقى حسابك آمناً تماماً.
+        </p>
+      </div>
+      <hr style="border:none;border-top:1px solid #1e1e1e;margin:28px 0;">
+      <p style="color:#444;font-size:0.75rem;text-align:center;margin:0;">© ${new Date().getFullYear()} Trainova. جميع الحقوق محفوظة.</p>
+    </div>
+    </body></html>`;
+
+    const htmlEn = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    </head>
+    <body style="margin:0;padding:0;background:#111;">
+    <div style="font-family:'Rajdhani',Arial,sans-serif;background:#0d0d0d;color:#fff;padding:48px 24px;max-width:580px;margin:32px auto;border-radius:16px;border:1px solid #1e1e1e;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+      <!-- Header -->
+      <div style="text-align:center;margin-bottom:36px;">
+        <div style="display:inline-flex;align-items:center;gap:12px;">
+          <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:50%;width:52px;height:52px;display:inline-flex;align-items:center;justify-content:center;font-size:24px;line-height:1;">⚡</div>
+          <span style="font-size:2rem;font-weight:700;letter-spacing:4px;background:linear-gradient(135deg,#ffc107,#ff9500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">TRAINOVA</span>
+        </div>
+        <div style="width:60px;height:3px;background:linear-gradient(135deg,#ffc107,#ff6b00);margin:16px auto 0;border-radius:2px;"></div>
+      </div>
+      <!-- Body -->
+      <h2 style="color:#ffc107;margin:0 0 16px;font-size:1.5rem;font-weight:700;">Reset Your Password</h2>
+      <p style="color:#bbb;line-height:1.9;margin:0 0 28px;font-size:1rem;">Hi there,<br>We received a request to reset the password for your Trainova account.<br>Click the button below to create a new password.</p>
+      <!-- CTA Button -->
+      <div style="text-align:center;margin:32px 0;">
+        <a href="${resetUrl}" style="background:linear-gradient(135deg,#ffc107,#ff6b00);color:#000;text-decoration:none;padding:16px 44px;border-radius:10px;font-weight:700;font-size:1rem;display:inline-block;letter-spacing:1px;box-shadow:0 4px 16px rgba(255,193,7,0.35);">⚡ Reset My Password</a>
+      </div>
+      <!-- Warning -->
+      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:16px 20px;margin:24px 0;">
+        <p style="color:#888;font-size:0.85rem;line-height:1.8;margin:0;">
+          ⏱ This link is valid for <strong style="color:#ffc107;">1 hour</strong> only.<br>
+          🔒 If you didn't request this, you can safely ignore this email — your account remains secure.
+        </p>
+      </div>
+      <hr style="border:none;border-top:1px solid #1e1e1e;margin:28px 0;">
+      <p style="color:#444;font-size:0.75rem;text-align:center;margin:0;">© ${new Date().getFullYear()} Trainova. All rights reserved.</p>
+    </div>
+    </body></html>`;
+
+    const payload = {
+        sender: { name: 'Trainova', email: process.env.BREVO_SENDER_EMAIL || 'noreply@trainova.app' },
+        to: [{ email: toEmail }],
         subject,
-        html
+        htmlContent: isAr ? htmlAr : htmlEn
+    };
+
+    const response = await axios.post(BREVO_API_URL, payload, {
+        headers: {
+            'api-key': process.env.BREVO_API_KEY,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
     });
+
+    if (response.status !== 201) {
+        throw new Error(`Brevo API error: ${response.status} — ${JSON.stringify(response.data)}`);
+    }
+
+    console.log(`✅ Reset email sent via Brevo to ${toEmail} (messageId: ${response.data.messageId})`);
 }
 
 // ── Cloudinary config (set these 3 vars in Railway environment variables) ──
