@@ -20,71 +20,175 @@ async function sendResetEmail(toEmail, resetUrl, lang = 'en') {
     const htmlAr = `
     <!DOCTYPE html>
     <html dir="rtl" lang="ar">
-    <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1.0">
+      <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     </head>
-    <body style="margin:0;padding:0;background:#111;">
-    <div style="font-family:'Cairo',Arial,sans-serif;background:#0d0d0d;color:#fff;padding:48px 24px;max-width:580px;margin:32px auto;border-radius:16px;border:1px solid #1e1e1e;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-      <!-- Header -->
-      <div style="text-align:center;margin-bottom:36px;">
-        <div style="display:inline-flex;align-items:center;gap:12px;">
-          <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:50%;width:52px;height:52px;display:inline-flex;align-items:center;justify-content:center;font-size:24px;line-height:1;">⚡</div>
-          <span style="font-size:2rem;font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#ffc107,#ff9500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">TRAINOVA</span>
-        </div>
-        <div style="width:60px;height:3px;background:linear-gradient(135deg,#ffc107,#ff6b00);margin:16px auto 0;border-radius:2px;"></div>
-      </div>
-      <!-- Body -->
-      <h2 style="color:#ffc107;margin:0 0 16px;font-size:1.5rem;font-weight:700;">إعادة تعيين كلمة المرور</h2>
-      <p style="color:#bbb;line-height:1.9;margin:0 0 28px;font-size:1rem;">مرحباً،<br>تلقّينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك في Trainova.<br>انقر على الزر أدناه لإنشاء كلمة مرور جديدة.</p>
-      <!-- CTA Button -->
-      <div style="text-align:center;margin:32px 0;">
-        <a href="${resetUrl}" style="background:linear-gradient(135deg,#ffc107,#ff6b00);color:#000;text-decoration:none;padding:16px 44px;border-radius:10px;font-weight:900;font-size:1rem;display:inline-block;letter-spacing:1px;box-shadow:0 4px 16px rgba(255,193,7,0.35);">⚡ إعادة تعيين كلمة المرور</a>
-      </div>
-      <!-- Warning -->
-      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:16px 20px;margin:24px 0;">
-        <p style="color:#888;font-size:0.85rem;line-height:1.8;margin:0;">
-          ⏱ هذا الرابط صالح لمدة <strong style="color:#ffc107;">ساعة واحدة</strong> فقط.<br>
-          🔒 إذا لم تطلب ذلك، تجاهل هذه الرسالة وسيبقى حسابك آمناً تماماً.
-        </p>
-      </div>
-      <hr style="border:none;border-top:1px solid #1e1e1e;margin:28px 0;">
-      <p style="color:#444;font-size:0.75rem;text-align:center;margin:0;">© ${new Date().getFullYear()} Trainova. جميع الحقوق محفوظة.</p>
-    </div>
+    <body style="margin:0;padding:0;background:#0a0a0a;font-family:'Cairo',Arial,sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 16px;">
+        <tr><td align="center">
+          <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111;border-radius:20px;border:1px solid #222;overflow:hidden;">
+
+            <!-- Top accent bar -->
+            <tr><td style="background:linear-gradient(90deg,#ffc107,#ff6b00,#ffc107);height:4px;"></td></tr>
+
+            <!-- Header -->
+            <tr><td style="padding:40px 40px 28px;text-align:center;background:linear-gradient(180deg,#1a1400 0%,#111 100%);">
+              <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                <tr>
+                  <td style="vertical-align:middle;padding-left:12px;">
+                    <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:14px;width:48px;height:48px;display:inline-flex;align-items:center;justify-content:center;font-size:22px;line-height:48px;text-align:center;">⚡</div>
+                  </td>
+                  <td style="vertical-align:middle;padding-right:4px;">
+                    <span style="font-size:1.9rem;font-weight:900;letter-spacing:5px;color:#ffc107;">TRAINOVA</span>
+                  </td>
+                </tr>
+              </table>
+              <div style="width:50px;height:2px;background:linear-gradient(90deg,#ffc107,#ff6b00);margin:18px auto 0;border-radius:2px;"></div>
+            </td></tr>
+
+            <!-- Lock icon -->
+            <tr><td style="padding:32px 40px 0;text-align:center;">
+              <div style="width:72px;height:72px;background:rgba(255,193,7,0.1);border:2px solid rgba(255,193,7,0.25);border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:28px;line-height:72px;">🔑</div>
+            </td></tr>
+
+            <!-- Title + body -->
+            <tr><td style="padding:24px 40px 8px;text-align:center;">
+              <h1 style="color:#fff;font-size:1.5rem;font-weight:900;margin:0 0 8px;letter-spacing:1px;">إعادة تعيين كلمة المرور</h1>
+              <p style="color:#888;font-size:0.9rem;margin:0;">طلبت إعادة تعيين كلمة مرور حسابك</p>
+            </td></tr>
+
+            <tr><td style="padding:16px 40px 0;">
+              <div style="background:#161616;border-radius:12px;padding:24px;border:1px solid #222;">
+                <p style="color:#ccc;line-height:1.85;margin:0;font-size:0.95rem;">
+                  مرحباً،<br><br>
+                  تلقّينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك في <strong style="color:#ffc107;">Trainova</strong>.<br>
+                  انقر على الزر أدناه لإنشاء كلمة مرور جديدة خلال الساعة القادمة.
+                </p>
+              </div>
+            </td></tr>
+
+            <!-- CTA -->
+            <tr><td style="padding:28px 40px;text-align:center;">
+              <a href="${resetUrl}" style="display:inline-block;background:linear-gradient(135deg,#ffc107,#ff8c00);color:#000;text-decoration:none;padding:15px 48px;border-radius:12px;font-weight:900;font-size:1rem;letter-spacing:1.5px;box-shadow:0 6px 24px rgba(255,193,7,0.3);">⚡&nbsp; إعادة تعيين كلمة المرور</a>
+              <p style="color:#555;font-size:0.78rem;margin:14px 0 0;">أو انسخ هذا الرابط وألصقه في متصفحك</p>
+              <p style="color:#444;font-size:0.72rem;margin:6px 0 0;word-break:break-all;">${resetUrl}</p>
+            </td></tr>
+
+            <!-- Info boxes -->
+            <tr><td style="padding:0 40px 32px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="48%" style="background:#161616;border:1px solid #222;border-radius:10px;padding:14px 16px;vertical-align:top;">
+                    <p style="margin:0;color:#ffc107;font-size:0.85rem;font-weight:700;">⏱ صالح لمدة</p>
+                    <p style="margin:4px 0 0;color:#bbb;font-size:0.82rem;">ساعة واحدة فقط من الآن</p>
+                  </td>
+                  <td width="4%"></td>
+                  <td width="48%" style="background:#161616;border:1px solid #222;border-radius:10px;padding:14px 16px;vertical-align:top;">
+                    <p style="margin:0;color:#4ade80;font-size:0.85rem;font-weight:700;">🔒 حسابك آمن</p>
+                    <p style="margin:4px 0 0;color:#bbb;font-size:0.82rem;">إذا لم تطلب ذلك، تجاهل هذا الإيميل</p>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+
+            <!-- Footer -->
+            <tr><td style="border-top:1px solid #1e1e1e;padding:20px 40px;text-align:center;">
+              <p style="color:#444;font-size:0.75rem;margin:0;">© ${new Date().getFullYear()} Trainova — جميع الحقوق محفوظة</p>
+              <p style="color:#333;font-size:0.7rem;margin:6px 0 0;">هذا بريد آلي، لا تقم بالرد عليه</p>
+            </td></tr>
+
+          </table>
+        </td></tr>
+      </table>
     </body></html>`;
 
     const htmlEn = `
     <!DOCTYPE html>
     <html lang="en">
-    <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1.0">
+      <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
     </head>
-    <body style="margin:0;padding:0;background:#111;">
-    <div style="font-family:'Rajdhani',Arial,sans-serif;background:#0d0d0d;color:#fff;padding:48px 24px;max-width:580px;margin:32px auto;border-radius:16px;border:1px solid #1e1e1e;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-      <!-- Header -->
-      <div style="text-align:center;margin-bottom:36px;">
-        <div style="display:inline-flex;align-items:center;gap:12px;">
-          <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:50%;width:52px;height:52px;display:inline-flex;align-items:center;justify-content:center;font-size:24px;line-height:1;">⚡</div>
-          <span style="font-size:2rem;font-weight:700;letter-spacing:4px;background:linear-gradient(135deg,#ffc107,#ff9500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">TRAINOVA</span>
-        </div>
-        <div style="width:60px;height:3px;background:linear-gradient(135deg,#ffc107,#ff6b00);margin:16px auto 0;border-radius:2px;"></div>
-      </div>
-      <!-- Body -->
-      <h2 style="color:#ffc107;margin:0 0 16px;font-size:1.5rem;font-weight:700;">Reset Your Password</h2>
-      <p style="color:#bbb;line-height:1.9;margin:0 0 28px;font-size:1rem;">Hi there,<br>We received a request to reset the password for your Trainova account.<br>Click the button below to create a new password.</p>
-      <!-- CTA Button -->
-      <div style="text-align:center;margin:32px 0;">
-        <a href="${resetUrl}" style="background:linear-gradient(135deg,#ffc107,#ff6b00);color:#000;text-decoration:none;padding:16px 44px;border-radius:10px;font-weight:700;font-size:1rem;display:inline-block;letter-spacing:1px;box-shadow:0 4px 16px rgba(255,193,7,0.35);">⚡ Reset My Password</a>
-      </div>
-      <!-- Warning -->
-      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:16px 20px;margin:24px 0;">
-        <p style="color:#888;font-size:0.85rem;line-height:1.8;margin:0;">
-          ⏱ This link is valid for <strong style="color:#ffc107;">1 hour</strong> only.<br>
-          🔒 If you didn't request this, you can safely ignore this email — your account remains secure.
-        </p>
-      </div>
-      <hr style="border:none;border-top:1px solid #1e1e1e;margin:28px 0;">
-      <p style="color:#444;font-size:0.75rem;text-align:center;margin:0;">© ${new Date().getFullYear()} Trainova. All rights reserved.</p>
-    </div>
+    <body style="margin:0;padding:0;background:#0a0a0a;font-family:'Rajdhani',Arial,sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 16px;">
+        <tr><td align="center">
+          <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111;border-radius:20px;border:1px solid #222;overflow:hidden;">
+
+            <!-- Top accent bar -->
+            <tr><td style="background:linear-gradient(90deg,#ffc107,#ff6b00,#ffc107);height:4px;"></td></tr>
+
+            <!-- Header -->
+            <tr><td style="padding:40px 40px 28px;text-align:center;background:linear-gradient(180deg,#1a1400 0%,#111 100%);">
+              <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                <tr>
+                  <td style="vertical-align:middle;padding-right:12px;">
+                    <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:14px;width:48px;height:48px;display:inline-block;line-height:48px;text-align:center;font-size:22px;">⚡</div>
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <span style="font-size:1.9rem;font-weight:700;letter-spacing:5px;color:#ffc107;">TRAINOVA</span>
+                  </td>
+                </tr>
+              </table>
+              <div style="width:50px;height:2px;background:linear-gradient(90deg,#ffc107,#ff6b00);margin:18px auto 0;border-radius:2px;"></div>
+            </td></tr>
+
+            <!-- Lock icon -->
+            <tr><td style="padding:32px 40px 0;text-align:center;">
+              <div style="width:72px;height:72px;background:rgba(255,193,7,0.1);border:2px solid rgba(255,193,7,0.25);border-radius:50%;margin:0 auto;line-height:72px;font-size:28px;text-align:center;">🔑</div>
+            </td></tr>
+
+            <!-- Title + body -->
+            <tr><td style="padding:24px 40px 8px;text-align:center;">
+              <h1 style="color:#fff;font-size:1.5rem;font-weight:700;margin:0 0 8px;letter-spacing:2px;">RESET YOUR PASSWORD</h1>
+              <p style="color:#888;font-size:0.9rem;margin:0;letter-spacing:0.5px;">You requested a password reset for your account</p>
+            </td></tr>
+
+            <tr><td style="padding:16px 40px 0;">
+              <div style="background:#161616;border-radius:12px;padding:24px;border:1px solid #222;">
+                <p style="color:#ccc;line-height:1.85;margin:0;font-size:0.95rem;">
+                  Hi there,<br><br>
+                  We received a request to reset the password for your <strong style="color:#ffc107;">Trainova</strong> account.<br>
+                  Click the button below to create a new password. This link expires in <strong style="color:#ffc107;">1 hour</strong>.
+                </p>
+              </div>
+            </td></tr>
+
+            <!-- CTA -->
+            <tr><td style="padding:28px 40px;text-align:center;">
+              <a href="${resetUrl}" style="display:inline-block;background:linear-gradient(135deg,#ffc107,#ff8c00);color:#000;text-decoration:none;padding:15px 48px;border-radius:12px;font-weight:700;font-size:1rem;letter-spacing:2px;box-shadow:0 6px 24px rgba(255,193,7,0.3);">⚡ RESET MY PASSWORD</a>
+              <p style="color:#555;font-size:0.78rem;margin:14px 0 0;">Or copy and paste this link into your browser</p>
+              <p style="color:#444;font-size:0.72rem;margin:6px 0 0;word-break:break-all;">${resetUrl}</p>
+            </td></tr>
+
+            <!-- Info boxes -->
+            <tr><td style="padding:0 40px 32px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="48%" style="background:#161616;border:1px solid #222;border-radius:10px;padding:14px 16px;vertical-align:top;">
+                    <p style="margin:0;color:#ffc107;font-size:0.85rem;font-weight:700;">⏱ Valid For</p>
+                    <p style="margin:4px 0 0;color:#bbb;font-size:0.82rem;">1 hour from now</p>
+                  </td>
+                  <td width="4%"></td>
+                  <td width="48%" style="background:#161616;border:1px solid #222;border-radius:10px;padding:14px 16px;vertical-align:top;">
+                    <p style="margin:0;color:#4ade80;font-size:0.85rem;font-weight:700;">🔒 Stay Safe</p>
+                    <p style="margin:4px 0 0;color:#bbb;font-size:0.82rem;">Ignore this if you didn't request it</p>
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+
+            <!-- Footer -->
+            <tr><td style="border-top:1px solid #1e1e1e;padding:20px 40px;text-align:center;">
+              <p style="color:#444;font-size:0.75rem;margin:0;">© ${new Date().getFullYear()} Trainova — All rights reserved</p>
+              <p style="color:#333;font-size:0.7rem;margin:6px 0 0;">This is an automated email, please do not reply</p>
+            </td></tr>
+
+          </table>
+        </td></tr>
+      </table>
     </body></html>`;
 
     const payload = {
@@ -1113,8 +1217,8 @@ app.post('/api/forgot-password', async (req, res) => {
 
         await PasswordResetToken.create({ userId: user._id, token: rawToken, expiresAt });
 
-        const appUrl = process.env.APP_URL || 'https://trainova.up.railway.app';
-        const resetUrl = `${appUrl}/auth/reset-password?token=${rawToken}&lang=${lang}`;
+        const appUrl = (process.env.APP_URL || 'https://trainova.up.railway.app').replace(/\/$/, '');
+        const resetUrl = `${appUrl}/reset-password?token=${rawToken}&lang=${lang}`;
 
         res.json({ success: true });
 
