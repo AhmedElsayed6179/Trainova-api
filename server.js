@@ -482,6 +482,180 @@ async function sendWelcomeEmail(toEmail, username, name, lang = 'en') {
     console.log(`✅ Welcome email sent via Brevo to ${toEmail}`);
 }
 
+// ── Email Verification Email ──
+async function sendVerificationEmail(toEmail, verifyUrl, lang = 'en', username = '', name = '') {
+    const isAr = lang === 'ar';
+    const subject = isAr ? 'تأكيد بريدك الإلكتروني — Trainova' : 'Verify Your Email — Trainova';
+
+    const userGreetingAr = name ? `مرحباً <strong style="color:#ffc107;font-family:'Cairo',sans-serif;">@${username}</strong>،` : 'مرحباً،';
+    const userGreetingEn = name ? `Hi <strong style="color:#ffc107;">@${username}</strong>,` : 'Hi there,';
+
+    const htmlAr = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:0;background:#060606;font-family:'Cairo',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#060606;padding:40px 16px;">
+  <tr><td align="center">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background:#0f0f0f;border-radius:24px;border:1px solid #1c1c1c;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,0.8);">
+    <tr><td style="height:3px;background:linear-gradient(90deg,#ffc107,#ff6b00,#ff6b00,#ffc107);"></td></tr>
+    <tr><td style="padding:44px 48px 36px;text-align:center;background:radial-gradient(ellipse at top,#1a1200 0%,#0f0f0f 70%);">
+      <table cellpadding="0" cellspacing="0" style="margin:0 auto 6px;">
+        <tr>
+          <td style="vertical-align:middle;padding-left:10px;">
+            <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:13px;width:46px;height:46px;line-height:46px;text-align:center;font-size:20px;display:inline-block;box-shadow:0 4px 20px rgba(255,193,7,0.4);">⚡</div>
+          </td>
+          <td style="vertical-align:middle;">
+            <span style="font-size:1.85rem;font-weight:900;letter-spacing:5px;color:#ffc107;">TRAINOVA</span>
+          </td>
+        </tr>
+      </table>
+      <div style="width:40px;height:2px;background:linear-gradient(90deg,#ffc107,#ff6b00);margin:14px auto 0;border-radius:2px;"></div>
+    </td></tr>
+    <tr><td style="padding:36px 48px 0;text-align:center;">
+      <div style="width:76px;height:76px;background:radial-gradient(circle,rgba(255,193,7,0.1),rgba(255,193,7,0.02));border:1.5px solid rgba(255,193,7,0.2);border-radius:50%;margin:0 auto;line-height:76px;font-size:30px;text-align:center;box-shadow:0 0 30px rgba(255,193,7,0.08);">✉️</div>
+    </td></tr>
+    <tr><td style="padding:22px 48px 6px;text-align:center;">
+      <h1 style="color:#fff;font-size:1.5rem;font-weight:900;margin:0 0 8px;letter-spacing:1px;">تأكيد البريد الإلكتروني</h1>
+      <p style="color:#555;font-size:0.88rem;margin:0;">خطوة أخيرة لتفعيل حسابك</p>
+    </td></tr>
+    <tr><td style="padding:16px 48px 0;">
+      <div style="background:#131313;border-radius:14px;padding:24px 28px;border:1px solid #1e1e1e;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,193,7,0.2),transparent);"></div>
+        <p style="color:#bbb;line-height:1.9;margin:0;font-size:0.93rem;">
+          ${userGreetingAr}<br><br>
+          شكراً لتسجيلك في <strong style="color:#ffc107;">Trainova</strong>!<br>
+          انقر على الزر أدناه لتأكيد بريدك الإلكتروني وتفعيل حسابك. الرابط صالح لمدة <strong style="color:#ffc107;">24 ساعة</strong>.
+        </p>
+      </div>
+    </td></tr>
+    <tr><td style="padding:32px 48px 10px;text-align:center;">
+      <a href="${verifyUrl}" style="display:inline-block;background:linear-gradient(135deg,#ffc107 0%,#ff8c00 100%);color:#000;text-decoration:none;padding:16px 52px;border-radius:14px;font-weight:900;font-size:1rem;letter-spacing:1.5px;font-family:'Cairo',sans-serif;box-shadow:0 8px 32px rgba(255,193,7,0.25),0 2px 8px rgba(0,0,0,0.4);">✉️&nbsp; تأكيد البريد الإلكتروني</a>
+      <p style="color:#444;font-size:0.76rem;margin:14px 0 0;">أو انسخ هذا الرابط وألصقه في متصفحك</p>
+    </td></tr>
+    <tr><td style="padding:0 48px 28px;">
+      <div style="background:#0d0d0d;border:1px dashed #222;border-radius:8px;padding:10px 16px;word-break:break-all;color:#333;font-size:0.68rem;font-family:monospace;text-align:left;">${verifyUrl}</div>
+    </td></tr>
+    <tr><td style="padding:0 48px 36px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="48%" style="background:#131313;border:1px solid #1e1e1e;border-radius:12px;padding:16px;vertical-align:top;">
+            <p style="margin:0;color:#ffc107;font-size:0.82rem;font-weight:700;">⏱ صالح لمدة</p>
+            <p style="margin:6px 0 0;color:#555;font-size:0.78rem;line-height:1.5;">24 ساعة من الآن</p>
+          </td>
+          <td width="4%"></td>
+          <td width="48%" style="background:#131313;border:1px solid #1e1e1e;border-radius:12px;padding:16px;vertical-align:top;">
+            <p style="margin:0;color:#4ade80;font-size:0.82rem;font-weight:700;">🔒 حسابك آمن</p>
+            <p style="margin:6px 0 0;color:#555;font-size:0.78rem;line-height:1.5;">إذا لم تسجل، تجاهل هذا الإيميل</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+    <tr><td style="border-top:1px solid #181818;padding:20px 48px 24px;text-align:center;">
+      <p style="color:#333;font-size:0.73rem;margin:0;line-height:1.8;">© ${new Date().getFullYear()} Trainova — جميع الحقوق محفوظة<br>هذا بريد آلي، لا تقم بالرد عليه</p>
+    </td></tr>
+  </table>
+  </td></tr>
+</table>
+</body></html>`;
+
+    const htmlEn = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:0;background:#060606;font-family:'Rajdhani',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#060606;padding:40px 16px;">
+  <tr><td align="center">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background:#0f0f0f;border-radius:24px;border:1px solid #1c1c1c;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,0.8);">
+    <tr><td style="height:3px;background:linear-gradient(90deg,#ffc107,#ff6b00,#ff6b00,#ffc107);"></td></tr>
+    <tr><td style="padding:44px 48px 36px;text-align:center;background:radial-gradient(ellipse at top,#1a1200 0%,#0f0f0f 70%);">
+      <table cellpadding="0" cellspacing="0" style="margin:0 auto 6px;">
+        <tr>
+          <td style="vertical-align:middle;padding-right:12px;">
+            <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:13px;width:46px;height:46px;line-height:46px;text-align:center;font-size:20px;display:inline-block;box-shadow:0 4px 20px rgba(255,193,7,0.4);">⚡</div>
+          </td>
+          <td style="vertical-align:middle;">
+            <span style="font-size:1.85rem;font-weight:700;letter-spacing:6px;color:#ffc107;">TRAINOVA</span>
+          </td>
+        </tr>
+      </table>
+      <div style="width:40px;height:2px;background:linear-gradient(90deg,#ffc107,#ff6b00);margin:14px auto 0;border-radius:2px;"></div>
+    </td></tr>
+    <tr><td style="padding:36px 48px 0;text-align:center;">
+      <div style="width:76px;height:76px;background:radial-gradient(circle,rgba(255,193,7,0.1),rgba(255,193,7,0.02));border:1.5px solid rgba(255,193,7,0.2);border-radius:50%;margin:0 auto;line-height:76px;font-size:30px;text-align:center;box-shadow:0 0 30px rgba(255,193,7,0.08);">✉️</div>
+    </td></tr>
+    <tr><td style="padding:22px 48px 6px;text-align:center;">
+      <h1 style="color:#fff;font-size:1.6rem;font-weight:700;margin:0 0 8px;letter-spacing:3px;text-transform:uppercase;">Verify Your Email</h1>
+      <p style="color:#555;font-size:0.88rem;margin:0;letter-spacing:0.5px;">One last step to activate your account</p>
+    </td></tr>
+    <tr><td style="padding:16px 48px 0;">
+      <div style="background:#131313;border-radius:14px;padding:24px 28px;border:1px solid #1e1e1e;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,193,7,0.2),transparent);"></div>
+        <p style="color:#bbb;line-height:1.9;margin:0;font-size:0.93rem;">
+          ${userGreetingEn}<br><br>
+          Thank you for signing up for <strong style="color:#ffc107;">Trainova</strong>!<br>
+          Click the button below to verify your email and activate your account. This link expires in <strong style="color:#ffc107;">24 hours</strong>.
+        </p>
+      </div>
+    </td></tr>
+    <tr><td style="padding:32px 48px 10px;text-align:center;">
+      <a href="${verifyUrl}" style="display:inline-block;background:linear-gradient(135deg,#ffc107 0%,#ff8c00 100%);color:#000;text-decoration:none;padding:16px 52px;border-radius:14px;font-weight:700;font-size:1rem;letter-spacing:2.5px;font-family:'Rajdhani',sans-serif;box-shadow:0 8px 32px rgba(255,193,7,0.25),0 2px 8px rgba(0,0,0,0.4);text-transform:uppercase;">✉️ Verify My Email</a>
+      <p style="color:#444;font-size:0.76rem;margin:14px 0 0;letter-spacing:0.3px;">Or copy and paste this link into your browser</p>
+    </td></tr>
+    <tr><td style="padding:0 48px 28px;">
+      <div style="background:#0d0d0d;border:1px dashed #222;border-radius:8px;padding:10px 16px;word-break:break-all;color:#333;font-size:0.68rem;font-family:monospace;">${verifyUrl}</div>
+    </td></tr>
+    <tr><td style="padding:0 48px 36px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="48%" style="background:#131313;border:1px solid #1e1e1e;border-radius:12px;padding:16px;vertical-align:top;">
+            <p style="margin:0;color:#ffc107;font-size:0.82rem;font-weight:700;">⏱ Valid For</p>
+            <p style="margin:6px 0 0;color:#555;font-size:0.78rem;line-height:1.5;">24 hours from now</p>
+          </td>
+          <td width="4%"></td>
+          <td width="48%" style="background:#131313;border:1px solid #1e1e1e;border-radius:12px;padding:16px;vertical-align:top;">
+            <p style="margin:0;color:#4ade80;font-size:0.82rem;font-weight:700;">🔒 Stay Safe</p>
+            <p style="margin:6px 0 0;color:#555;font-size:0.78rem;line-height:1.5;">Ignore this if you didn't sign up</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+    <tr><td style="border-top:1px solid #181818;padding:20px 48px 24px;text-align:center;">
+      <p style="color:#333;font-size:0.73rem;margin:0;line-height:1.8;">© ${new Date().getFullYear()} Trainova — All rights reserved<br>This is an automated email, please do not reply</p>
+    </td></tr>
+  </table>
+  </td></tr>
+</table>
+</body></html>`;
+
+    const payload = {
+        sender: { name: 'Trainova', email: process.env.BREVO_SENDER_EMAIL || 'noreply@trainova.app' },
+        to: [{ email: toEmail }],
+        subject,
+        htmlContent: isAr ? htmlAr : htmlEn
+    };
+
+    const response = await axios.post(BREVO_API_URL, payload, {
+        headers: {
+            'api-key': process.env.BREVO_API_KEY,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    });
+
+    if (response.status !== 201) {
+        throw new Error(`Brevo API error: ${response.status} — ${JSON.stringify(response.data)}`);
+    }
+
+    console.log(`✅ Verification email sent via Brevo to ${toEmail}`);
+}
+
 // ── Cloudinary config (set these 3 vars in Railway environment variables) ──
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -627,6 +801,7 @@ const userSchema = new mongoose.Schema({
     phone: { type: String, required: true, unique: true },
     goal: { type: String, required: true, enum: ['abs', 'legs', 'full-body', 'back', 'all'] },
     profileImage: { type: String, default: null },
+    emailVerified: { type: Boolean, default: false },
     completed_days: { type: Number, default: 0 },
     total_workouts: { type: Number, default: 0 },
     current_streak: { type: Number, default: 0 },
@@ -694,6 +869,17 @@ const passwordResetTokenSchema = new mongoose.Schema({
 passwordResetTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 const PasswordResetToken = mongoose.model('PasswordResetToken', passwordResetTokenSchema);
 
+// ── Email Verification Token Schema ──
+const emailVerificationTokenSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    token: { type: String, required: true, unique: true },
+    expiresAt: { type: Date, required: true },
+    used: { type: Boolean, default: false },
+    sentAt: { type: Date, default: Date.now }
+});
+emailVerificationTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+const EmailVerificationToken = mongoose.model('EmailVerificationToken', emailVerificationTokenSchema);
+
 
 // ==================== MIDDLEWARE ====================
 
@@ -706,7 +892,8 @@ const checkDb = (req, res, next) => {
 
 ['/api/check-username', '/api/check-email', '/api/check-phone', '/api/register',
     '/api/login', '/api/users', '/api/profile', '/api/workout', '/api/user', '/api/dashboard',
-    '/api/change-password', '/api/profile', '/api/check-user'].forEach(route => app.use(route, checkDb));
+    '/api/change-password', '/api/profile', '/api/check-user', '/api/verify-email',
+    '/api/resend-verification'].forEach(route => app.use(route, checkDb));
 
 // ==================== EXERCISE LIBRARY ====================
 // Real exercises for each category with progressive difficulty
@@ -1417,20 +1604,37 @@ app.post('/api/register', async (req, res) => {
         if (await User.findOne({ username: userData.username })) return res.json({ success: false, error: 'username_exists' });
 
         const hashedPassword = await bcrypt.hash(userData.password, 10);
-        const newUser = new User({ ...userData, password: hashedPassword, completed_days: 0, total_workouts: 0, current_streak: 0 });
+        const newUser = new User({ ...userData, password: hashedPassword, completed_days: 0, total_workouts: 0, current_streak: 0, emailVerified: false });
         await newUser.save();
 
         const { password, ...userToReturn } = newUser.toObject();
         res.json({
             success: true,
-            message: 'Registration successful',
+            message: 'Registration successful. Please verify your email.',
             user: userToReturn,
-            token: Buffer.from(`${newUser._id}:${Date.now()}`).toString('base64')
+            token: Buffer.from(`${newUser._id}:${Date.now()}`).toString('base64'),
+            requiresVerification: true
         });
 
-        // Send welcome email (non-blocking)
+        // Send verification email (non-blocking)
         if (process.env.BREVO_API_KEY) {
             const lang = req.body.lang || 'en';
+            try {
+                // Delete any existing verification tokens
+                await EmailVerificationToken.deleteMany({ userId: newUser._id });
+                const rawToken = crypto.randomBytes(32).toString('hex');
+                const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                await EmailVerificationToken.create({ userId: newUser._id, token: rawToken, expiresAt });
+                const appUrl = (process.env.APP_URL || 'https://trainova.up.railway.app').replace(/\/$/, '');
+                const verifyUrl = `${appUrl}/verify?token=${rawToken}&lang=${lang}`;
+                sendVerificationEmail(newUser.email, verifyUrl, lang, newUser.username, newUser.name)
+                    .then(() => console.log(`✅ Verification email sent to ${newUser.email}`))
+                    .catch(err => console.error('❌ Verification email failed:', err.message));
+            } catch (err) {
+                console.error('❌ Could not create verification token:', err.message);
+            }
+
+            // Also send welcome email
             sendWelcomeEmail(newUser.email, newUser.username, newUser.name, lang)
                 .then(() => console.log(`✅ Welcome email sent to ${newUser.email}`))
                 .catch(err => console.error('❌ Welcome email failed:', err.message));
@@ -1454,6 +1658,21 @@ app.post('/api/login', async (req, res) => {
         const isValid = await bcrypt.compare(password, user.password);
         if (!isValid) return res.json({ success: false, error: 'invalid_credentials' });
 
+        // Check email verification
+        if (!user.emailVerified) {
+            // Check cooldown before potentially resending
+            const COOLDOWN_MS = 2 * 60 * 1000;
+            const lastToken = await EmailVerificationToken.findOne({ userId: user._id }).sort({ sentAt: -1 });
+            const canResend = !lastToken || (Date.now() - new Date(lastToken.sentAt).getTime() >= COOLDOWN_MS);
+            const secondsLeft = lastToken ? Math.max(0, Math.ceil((COOLDOWN_MS - (Date.now() - new Date(lastToken.sentAt).getTime())) / 1000)) : 0;
+            return res.json({
+                success: false,
+                error: 'email_not_verified',
+                canResend,
+                secondsLeft
+            });
+        }
+
         const { password: pw, ...userData } = user.toObject();
         res.json({ success: true, user: userData, token: Buffer.from(`${user._id}:${Date.now()}`).toString('base64') });
     } catch (e) { res.status(500).json({ success: false, error: 'server_error' }); }
@@ -1474,6 +1693,73 @@ app.post('/api/check-user', async (req, res) => {
     } catch (e) { res.status(500).json({ exists: false, error: e.message }); }
 });
 
+// ── Verify email via token ──
+app.get('/api/verify-email', async (req, res) => {
+    try {
+        const { token } = req.query;
+        if (!token) return res.json({ success: false, error: 'missing_token' });
+
+        const verifyToken = await EmailVerificationToken.findOne({ token, used: false });
+        if (!verifyToken) return res.json({ success: false, error: 'invalid_token' });
+        if (verifyToken.expiresAt < new Date()) {
+            await EmailVerificationToken.deleteOne({ _id: verifyToken._id });
+            return res.json({ success: false, error: 'token_expired' });
+        }
+
+        await User.findByIdAndUpdate(verifyToken.userId, { emailVerified: true });
+        await EmailVerificationToken.deleteOne({ _id: verifyToken._id });
+
+        res.json({ success: true });
+    } catch (e) {
+        console.error('verify-email error:', e);
+        res.status(500).json({ success: false, error: 'server_error' });
+    }
+});
+
+// ── Resend verification email ──
+app.post('/api/resend-verification', async (req, res) => {
+    try {
+        const { identifier, lang: reqLang } = req.body;
+        const lang = reqLang || 'en';
+        if (!identifier) return res.status(400).json({ success: false, error: 'identifier_required' });
+
+        const user = await User.findOne({
+            $or: [{ email: identifier.toLowerCase() }, { username: identifier }]
+        });
+        if (!user) return res.json({ success: false, error: 'user_not_found' });
+        if (user.emailVerified) return res.json({ success: false, error: 'already_verified' });
+
+        const COOLDOWN_MS = 2 * 60 * 1000;
+        const lastToken = await EmailVerificationToken.findOne({ userId: user._id }).sort({ sentAt: -1 });
+        if (lastToken) {
+            const elapsed = Date.now() - new Date(lastToken.sentAt).getTime();
+            if (elapsed < COOLDOWN_MS) {
+                const secondsLeft = Math.ceil((COOLDOWN_MS - elapsed) / 1000);
+                return res.json({ success: false, error: 'cooldown', secondsLeft });
+            }
+        }
+
+        await EmailVerificationToken.deleteMany({ userId: user._id });
+        const rawToken = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        await EmailVerificationToken.create({ userId: user._id, token: rawToken, expiresAt });
+
+        const appUrl = (process.env.APP_URL || 'https://trainova.up.railway.app').replace(/\/$/, '');
+        const verifyUrl = `${appUrl}/verify?token=${rawToken}&lang=${lang}`;
+
+        res.json({ success: true });
+
+        if (process.env.BREVO_API_KEY) {
+            sendVerificationEmail(user.email, verifyUrl, lang, user.username, user.name)
+                .then(() => console.log(`✅ Resent verification email to ${user.email}`))
+                .catch(err => console.error('❌ Resend verification failed:', err.message));
+        }
+    } catch (e) {
+        console.error('resend-verification error:', e);
+        res.status(500).json({ success: false, error: 'server_error' });
+    }
+});
+
 app.post('/api/forgot-password', async (req, res) => {
     try {
         const identifier = (req.body.identifier || req.body.email || '').trim();
@@ -1487,6 +1773,30 @@ app.post('/api/forgot-password', async (req, res) => {
             ]
         });
         if (!user) return res.json({ success: false, error: 'user_not_found' });
+
+        // ── If account not verified: send verification email instead ──
+        if (!user.emailVerified) {
+            const VERIFY_COOLDOWN_MS = 2 * 60 * 1000;
+            const lastVerifyToken = await EmailVerificationToken.findOne({ userId: user._id }).sort({ sentAt: -1 });
+            if (lastVerifyToken) {
+                const elapsed = Date.now() - new Date(lastVerifyToken.sentAt).getTime();
+                if (elapsed < VERIFY_COOLDOWN_MS) {
+                    const secondsLeft = Math.ceil((VERIFY_COOLDOWN_MS - elapsed) / 1000);
+                    return res.json({ success: false, error: 'email_not_verified', cooldown: true, secondsLeft });
+                }
+            }
+            if (process.env.BREVO_API_KEY) {
+                await EmailVerificationToken.deleteMany({ userId: user._id });
+                const rawToken = crypto.randomBytes(32).toString('hex');
+                const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                await EmailVerificationToken.create({ userId: user._id, token: rawToken, expiresAt });
+                const appUrl = (process.env.APP_URL || 'https://trainova.up.railway.app').replace(/\/$/, '');
+                const verifyUrl = `${appUrl}/verify?token=${rawToken}&lang=${lang}`;
+                sendVerificationEmail(user.email, verifyUrl, lang, user.username, user.name)
+                    .catch(err => console.error('❌ Verification email failed:', err.message));
+            }
+            return res.json({ success: false, error: 'email_not_verified', verificationSent: true });
+        }
 
         // ── Cooldown: 2 minutes between reset emails ──
         const COOLDOWN_MS = 2 * 60 * 1000;
