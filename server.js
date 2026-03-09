@@ -1114,7 +1114,7 @@ app.post('/api/forgot-password', async (req, res) => {
 
         res.json({ success: true });
 
-        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        if (process.env.BREVO_API_KEY) {
             console.log('📧 Attempting to send email to:', user.email);
             sendResetEmail(user.email, resetUrl, lang)
                 .then(() => console.log('✅ Email sent successfully'))
