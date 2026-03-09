@@ -13,183 +13,199 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 // ── Brevo (Sendinblue) Email Service ──
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
-async function sendResetEmail(toEmail, resetUrl, lang = 'en') {
+async function sendResetEmail(toEmail, resetUrl, lang = 'en', username = '') {
     const isAr = lang === 'ar';
     const subject = isAr ? 'إعادة تعيين كلمة المرور — Trainova' : 'Reset Your Password — Trainova';
+    const userGreetingAr = username
+        ? `مرحباً <strong style="color:#ffc107;font-family:'Cairo',sans-serif;">@${username}</strong>،`
+        : 'مرحباً،';
+    const userGreetingEn = username
+        ? `Hi <strong style="color:#ffc107;">@${username}</strong>,`
+        : 'Hi there,';
 
-    const htmlAr = `
-    <!DOCTYPE html>
-    <html dir="rtl" lang="ar">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1.0">
-      <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    </head>
-    <body style="margin:0;padding:0;background:#0a0a0a;font-family:'Cairo',Arial,sans-serif;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 16px;">
-        <tr><td align="center">
-          <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111;border-radius:20px;border:1px solid #222;overflow:hidden;">
+    /* ─────────── ARABIC TEMPLATE ─────────── */
+    const htmlAr = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:0;background:#060606;font-family:'Cairo',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#060606;padding:40px 16px;">
+  <tr><td align="center">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background:#0f0f0f;border-radius:24px;border:1px solid #1c1c1c;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,0.8);">
 
-            <!-- Top accent bar -->
-            <tr><td style="background:linear-gradient(90deg,#ffc107,#ff6b00,#ffc107);height:4px;"></td></tr>
+    <!-- Shimmer accent bar -->
+    <tr><td style="height:3px;background:linear-gradient(90deg,#ffc107,#ff6b00,#ff6b00,#ffc107);background-size:300% 100%;"></td></tr>
 
-            <!-- Header -->
-            <tr><td style="padding:40px 40px 28px;text-align:center;background:linear-gradient(180deg,#1a1400 0%,#111 100%);">
-              <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
-                <tr>
-                  <td style="vertical-align:middle;padding-left:12px;">
-                    <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:14px;width:48px;height:48px;display:inline-flex;align-items:center;justify-content:center;font-size:22px;line-height:48px;text-align:center;">⚡</div>
-                  </td>
-                  <td style="vertical-align:middle;padding-right:4px;">
-                    <span style="font-size:1.9rem;font-weight:900;letter-spacing:5px;color:#ffc107;">TRAINOVA</span>
-                  </td>
-                </tr>
-              </table>
-              <div style="width:50px;height:2px;background:linear-gradient(90deg,#ffc107,#ff6b00);margin:18px auto 0;border-radius:2px;"></div>
-            </td></tr>
-
-            <!-- Lock icon -->
-            <tr><td style="padding:32px 40px 0;text-align:center;">
-              <div style="width:72px;height:72px;background:rgba(255,193,7,0.1);border:2px solid rgba(255,193,7,0.25);border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:28px;line-height:72px;">🔑</div>
-            </td></tr>
-
-            <!-- Title + body -->
-            <tr><td style="padding:24px 40px 8px;text-align:center;">
-              <h1 style="color:#fff;font-size:1.5rem;font-weight:900;margin:0 0 8px;letter-spacing:1px;">إعادة تعيين كلمة المرور</h1>
-              <p style="color:#888;font-size:0.9rem;margin:0;">طلبت إعادة تعيين كلمة مرور حسابك</p>
-            </td></tr>
-
-            <tr><td style="padding:16px 40px 0;">
-              <div style="background:#161616;border-radius:12px;padding:24px;border:1px solid #222;">
-                <p style="color:#ccc;line-height:1.85;margin:0;font-size:0.95rem;">
-                  مرحباً،<br><br>
-                  تلقّينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك في <strong style="color:#ffc107;">Trainova</strong>.<br>
-                  انقر على الزر أدناه لإنشاء كلمة مرور جديدة خلال الساعة القادمة.
-                </p>
-              </div>
-            </td></tr>
-
-            <!-- CTA -->
-            <tr><td style="padding:28px 40px;text-align:center;">
-              <a href="${resetUrl}" style="display:inline-block;background:linear-gradient(135deg,#ffc107,#ff8c00);color:#000;text-decoration:none;padding:15px 48px;border-radius:12px;font-weight:900;font-size:1rem;letter-spacing:1.5px;box-shadow:0 6px 24px rgba(255,193,7,0.3);">⚡&nbsp; إعادة تعيين كلمة المرور</a>
-              <p style="color:#555;font-size:0.78rem;margin:14px 0 0;">أو انسخ هذا الرابط وألصقه في متصفحك</p>
-              <p style="color:#444;font-size:0.72rem;margin:6px 0 0;word-break:break-all;">${resetUrl}</p>
-            </td></tr>
-
-            <!-- Info boxes -->
-            <tr><td style="padding:0 40px 32px;">
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td width="48%" style="background:#161616;border:1px solid #222;border-radius:10px;padding:14px 16px;vertical-align:top;">
-                    <p style="margin:0;color:#ffc107;font-size:0.85rem;font-weight:700;">⏱ صالح لمدة</p>
-                    <p style="margin:4px 0 0;color:#bbb;font-size:0.82rem;">ساعة واحدة فقط من الآن</p>
-                  </td>
-                  <td width="4%"></td>
-                  <td width="48%" style="background:#161616;border:1px solid #222;border-radius:10px;padding:14px 16px;vertical-align:top;">
-                    <p style="margin:0;color:#4ade80;font-size:0.85rem;font-weight:700;">🔒 حسابك آمن</p>
-                    <p style="margin:4px 0 0;color:#bbb;font-size:0.82rem;">إذا لم تطلب ذلك، تجاهل هذا الإيميل</p>
-                  </td>
-                </tr>
-              </table>
-            </td></tr>
-
-            <!-- Footer -->
-            <tr><td style="border-top:1px solid #1e1e1e;padding:20px 40px;text-align:center;">
-              <p style="color:#444;font-size:0.75rem;margin:0;">© ${new Date().getFullYear()} Trainova — جميع الحقوق محفوظة</p>
-              <p style="color:#333;font-size:0.7rem;margin:6px 0 0;">هذا بريد آلي، لا تقم بالرد عليه</p>
-            </td></tr>
-
-          </table>
-        </td></tr>
+    <!-- Header -->
+    <tr><td style="padding:44px 48px 36px;text-align:center;background:radial-gradient(ellipse at top,#1a1200 0%,#0f0f0f 70%);">
+      <table cellpadding="0" cellspacing="0" style="margin:0 auto 6px;">
+        <tr>
+          <td style="vertical-align:middle;padding-left:10px;">
+            <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:13px;width:46px;height:46px;line-height:46px;text-align:center;font-size:20px;display:inline-block;box-shadow:0 4px 20px rgba(255,193,7,0.4);">⚡</div>
+          </td>
+          <td style="vertical-align:middle;">
+            <span style="font-size:1.85rem;font-weight:900;letter-spacing:5px;color:#ffc107;">TRAINOVA</span>
+          </td>
+        </tr>
       </table>
-    </body></html>`;
+      <div style="width:40px;height:2px;background:linear-gradient(90deg,#ffc107,#ff6b00);margin:14px auto 0;border-radius:2px;"></div>
+    </td></tr>
 
-    const htmlEn = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1.0">
-      <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
-    </head>
-    <body style="margin:0;padding:0;background:#0a0a0a;font-family:'Rajdhani',Arial,sans-serif;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 16px;">
-        <tr><td align="center">
-          <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111;border-radius:20px;border:1px solid #222;overflow:hidden;">
+    <!-- Key icon -->
+    <tr><td style="padding:36px 48px 0;text-align:center;">
+      <div style="width:76px;height:76px;background:radial-gradient(circle,rgba(255,193,7,0.1),rgba(255,193,7,0.02));border:1.5px solid rgba(255,193,7,0.2);border-radius:50%;margin:0 auto;line-height:76px;font-size:30px;text-align:center;box-shadow:0 0 30px rgba(255,193,7,0.08);">🔑</div>
+    </td></tr>
 
-            <!-- Top accent bar -->
-            <tr><td style="background:linear-gradient(90deg,#ffc107,#ff6b00,#ffc107);height:4px;"></td></tr>
+    <!-- Title -->
+    <tr><td style="padding:22px 48px 6px;text-align:center;">
+      <h1 style="color:#fff;font-size:1.5rem;font-weight:900;margin:0 0 8px;letter-spacing:1px;">إعادة تعيين كلمة المرور</h1>
+      <p style="color:#555;font-size:0.88rem;margin:0;">طلبت إعادة تعيين كلمة مرور حسابك</p>
+    </td></tr>
 
-            <!-- Header -->
-            <tr><td style="padding:40px 40px 28px;text-align:center;background:linear-gradient(180deg,#1a1400 0%,#111 100%);">
-              <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
-                <tr>
-                  <td style="vertical-align:middle;padding-right:12px;">
-                    <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:14px;width:48px;height:48px;display:inline-block;line-height:48px;text-align:center;font-size:22px;">⚡</div>
-                  </td>
-                  <td style="vertical-align:middle;">
-                    <span style="font-size:1.9rem;font-weight:700;letter-spacing:5px;color:#ffc107;">TRAINOVA</span>
-                  </td>
-                </tr>
-              </table>
-              <div style="width:50px;height:2px;background:linear-gradient(90deg,#ffc107,#ff6b00);margin:18px auto 0;border-radius:2px;"></div>
-            </td></tr>
+    <!-- Body card -->
+    <tr><td style="padding:16px 48px 0;">
+      <div style="background:#131313;border-radius:14px;padding:24px 28px;border:1px solid #1e1e1e;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,193,7,0.2),transparent);"></div>
+        <p style="color:#bbb;line-height:1.9;margin:0;font-size:0.93rem;">
+          ${userGreetingAr}<br><br>
+          تلقّينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك في <strong style="color:#ffc107;">Trainova</strong>.<br>
+          انقر على الزر أدناه لإنشاء كلمة مرور جديدة. الرابط صالح لمدة <strong style="color:#ffc107;">ساعة واحدة</strong> فقط.
+        </p>
+      </div>
+    </td></tr>
 
-            <!-- Lock icon -->
-            <tr><td style="padding:32px 40px 0;text-align:center;">
-              <div style="width:72px;height:72px;background:rgba(255,193,7,0.1);border:2px solid rgba(255,193,7,0.25);border-radius:50%;margin:0 auto;line-height:72px;font-size:28px;text-align:center;">🔑</div>
-            </td></tr>
+    <!-- CTA -->
+    <tr><td style="padding:32px 48px 10px;text-align:center;">
+      <a href="${resetUrl}" style="display:inline-block;background:linear-gradient(135deg,#ffc107 0%,#ff8c00 100%);color:#000;text-decoration:none;padding:16px 52px;border-radius:14px;font-weight:900;font-size:1rem;letter-spacing:1.5px;font-family:'Cairo',sans-serif;box-shadow:0 8px 32px rgba(255,193,7,0.25),0 2px 8px rgba(0,0,0,0.4);">⚡&nbsp; إعادة تعيين كلمة المرور</a>
+      <p style="color:#444;font-size:0.76rem;margin:14px 0 0;">أو انسخ هذا الرابط وألصقه في متصفحك</p>
+    </td></tr>
 
-            <!-- Title + body -->
-            <tr><td style="padding:24px 40px 8px;text-align:center;">
-              <h1 style="color:#fff;font-size:1.5rem;font-weight:700;margin:0 0 8px;letter-spacing:2px;">RESET YOUR PASSWORD</h1>
-              <p style="color:#888;font-size:0.9rem;margin:0;letter-spacing:0.5px;">You requested a password reset for your account</p>
-            </td></tr>
+    <!-- URL box -->
+    <tr><td style="padding:0 48px 28px;">
+      <div style="background:#0d0d0d;border:1px dashed #222;border-radius:8px;padding:10px 16px;word-break:break-all;color:#333;font-size:0.68rem;font-family:monospace;text-align:left;">${resetUrl}</div>
+    </td></tr>
 
-            <tr><td style="padding:16px 40px 0;">
-              <div style="background:#161616;border-radius:12px;padding:24px;border:1px solid #222;">
-                <p style="color:#ccc;line-height:1.85;margin:0;font-size:0.95rem;">
-                  Hi there,<br><br>
-                  We received a request to reset the password for your <strong style="color:#ffc107;">Trainova</strong> account.<br>
-                  Click the button below to create a new password. This link expires in <strong style="color:#ffc107;">1 hour</strong>.
-                </p>
-              </div>
-            </td></tr>
-
-            <!-- CTA -->
-            <tr><td style="padding:28px 40px;text-align:center;">
-              <a href="${resetUrl}" style="display:inline-block;background:linear-gradient(135deg,#ffc107,#ff8c00);color:#000;text-decoration:none;padding:15px 48px;border-radius:12px;font-weight:700;font-size:1rem;letter-spacing:2px;box-shadow:0 6px 24px rgba(255,193,7,0.3);">⚡ RESET MY PASSWORD</a>
-              <p style="color:#555;font-size:0.78rem;margin:14px 0 0;">Or copy and paste this link into your browser</p>
-              <p style="color:#444;font-size:0.72rem;margin:6px 0 0;word-break:break-all;">${resetUrl}</p>
-            </td></tr>
-
-            <!-- Info boxes -->
-            <tr><td style="padding:0 40px 32px;">
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td width="48%" style="background:#161616;border:1px solid #222;border-radius:10px;padding:14px 16px;vertical-align:top;">
-                    <p style="margin:0;color:#ffc107;font-size:0.85rem;font-weight:700;">⏱ Valid For</p>
-                    <p style="margin:4px 0 0;color:#bbb;font-size:0.82rem;">1 hour from now</p>
-                  </td>
-                  <td width="4%"></td>
-                  <td width="48%" style="background:#161616;border:1px solid #222;border-radius:10px;padding:14px 16px;vertical-align:top;">
-                    <p style="margin:0;color:#4ade80;font-size:0.85rem;font-weight:700;">🔒 Stay Safe</p>
-                    <p style="margin:4px 0 0;color:#bbb;font-size:0.82rem;">Ignore this if you didn't request it</p>
-                  </td>
-                </tr>
-              </table>
-            </td></tr>
-
-            <!-- Footer -->
-            <tr><td style="border-top:1px solid #1e1e1e;padding:20px 40px;text-align:center;">
-              <p style="color:#444;font-size:0.75rem;margin:0;">© ${new Date().getFullYear()} Trainova — All rights reserved</p>
-              <p style="color:#333;font-size:0.7rem;margin:6px 0 0;">This is an automated email, please do not reply</p>
-            </td></tr>
-
-          </table>
-        </td></tr>
+    <!-- Info cards -->
+    <tr><td style="padding:0 48px 36px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="48%" style="background:#131313;border:1px solid #1e1e1e;border-radius:12px;padding:16px;vertical-align:top;">
+            <p style="margin:0;color:#ffc107;font-size:0.82rem;font-weight:700;">⏱ صالح لمدة</p>
+            <p style="margin:6px 0 0;color:#555;font-size:0.78rem;line-height:1.5;">ساعة واحدة فقط من الآن</p>
+          </td>
+          <td width="4%"></td>
+          <td width="48%" style="background:#131313;border:1px solid #1e1e1e;border-radius:12px;padding:16px;vertical-align:top;">
+            <p style="margin:0;color:#4ade80;font-size:0.82rem;font-weight:700;">🔒 حسابك آمن</p>
+            <p style="margin:6px 0 0;color:#555;font-size:0.78rem;line-height:1.5;">إذا لم تطلب ذلك، تجاهل هذا الإيميل</p>
+          </td>
+        </tr>
       </table>
-    </body></html>`;
+    </td></tr>
+
+    <!-- Footer -->
+    <tr><td style="border-top:1px solid #181818;padding:20px 48px 24px;text-align:center;">
+      <p style="color:#333;font-size:0.73rem;margin:0;line-height:1.8;">© ${new Date().getFullYear()} Trainova — جميع الحقوق محفوظة<br>هذا بريد آلي، لا تقم بالرد عليه</p>
+    </td></tr>
+
+  </table>
+  </td></tr>
+</table>
+</body></html>`;
+
+    /* ─────────── ENGLISH TEMPLATE ─────────── */
+    const htmlEn = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:0;background:#060606;font-family:'Rajdhani',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#060606;padding:40px 16px;">
+  <tr><td align="center">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background:#0f0f0f;border-radius:24px;border:1px solid #1c1c1c;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,0.8);">
+
+    <!-- Shimmer accent bar -->
+    <tr><td style="height:3px;background:linear-gradient(90deg,#ffc107,#ff6b00,#ff6b00,#ffc107);background-size:300% 100%;"></td></tr>
+
+    <!-- Header -->
+    <tr><td style="padding:44px 48px 36px;text-align:center;background:radial-gradient(ellipse at top,#1a1200 0%,#0f0f0f 70%);">
+      <table cellpadding="0" cellspacing="0" style="margin:0 auto 6px;">
+        <tr>
+          <td style="vertical-align:middle;padding-right:12px;">
+            <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:13px;width:46px;height:46px;line-height:46px;text-align:center;font-size:20px;display:inline-block;box-shadow:0 4px 20px rgba(255,193,7,0.4);">⚡</div>
+          </td>
+          <td style="vertical-align:middle;">
+            <span style="font-size:1.85rem;font-weight:700;letter-spacing:6px;color:#ffc107;">TRAINOVA</span>
+          </td>
+        </tr>
+      </table>
+      <div style="width:40px;height:2px;background:linear-gradient(90deg,#ffc107,#ff6b00);margin:14px auto 0;border-radius:2px;"></div>
+    </td></tr>
+
+    <!-- Key icon -->
+    <tr><td style="padding:36px 48px 0;text-align:center;">
+      <div style="width:76px;height:76px;background:radial-gradient(circle,rgba(255,193,7,0.1),rgba(255,193,7,0.02));border:1.5px solid rgba(255,193,7,0.2);border-radius:50%;margin:0 auto;line-height:76px;font-size:30px;text-align:center;box-shadow:0 0 30px rgba(255,193,7,0.08);">🔑</div>
+    </td></tr>
+
+    <!-- Title -->
+    <tr><td style="padding:22px 48px 6px;text-align:center;">
+      <h1 style="color:#fff;font-size:1.6rem;font-weight:700;margin:0 0 8px;letter-spacing:3px;text-transform:uppercase;">Reset Your Password</h1>
+      <p style="color:#555;font-size:0.88rem;margin:0;letter-spacing:0.5px;">You requested a password reset for your account</p>
+    </td></tr>
+
+    <!-- Body card -->
+    <tr><td style="padding:16px 48px 0;">
+      <div style="background:#131313;border-radius:14px;padding:24px 28px;border:1px solid #1e1e1e;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,193,7,0.2),transparent);"></div>
+        <p style="color:#bbb;line-height:1.9;margin:0;font-size:0.93rem;">
+          ${userGreetingEn}<br><br>
+          We received a request to reset the password for your <strong style="color:#ffc107;">Trainova</strong> account.<br>
+          Click the button below to create a new password. This link expires in <strong style="color:#ffc107;">1 hour</strong>.
+        </p>
+      </div>
+    </td></tr>
+
+    <!-- CTA -->
+    <tr><td style="padding:32px 48px 10px;text-align:center;">
+      <a href="${resetUrl}" style="display:inline-block;background:linear-gradient(135deg,#ffc107 0%,#ff8c00 100%);color:#000;text-decoration:none;padding:16px 52px;border-radius:14px;font-weight:700;font-size:1rem;letter-spacing:2.5px;font-family:'Rajdhani',sans-serif;box-shadow:0 8px 32px rgba(255,193,7,0.25),0 2px 8px rgba(0,0,0,0.4);text-transform:uppercase;">⚡ Reset My Password</a>
+      <p style="color:#444;font-size:0.76rem;margin:14px 0 0;letter-spacing:0.3px;">Or copy and paste this link into your browser</p>
+    </td></tr>
+
+    <!-- URL box -->
+    <tr><td style="padding:0 48px 28px;">
+      <div style="background:#0d0d0d;border:1px dashed #222;border-radius:8px;padding:10px 16px;word-break:break-all;color:#333;font-size:0.68rem;font-family:monospace;">${resetUrl}</div>
+    </td></tr>
+
+    <!-- Info cards -->
+    <tr><td style="padding:0 48px 36px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="48%" style="background:#131313;border:1px solid #1e1e1e;border-radius:12px;padding:16px;vertical-align:top;">
+            <p style="margin:0;color:#ffc107;font-size:0.82rem;font-weight:700;">⏱ Valid For</p>
+            <p style="margin:6px 0 0;color:#555;font-size:0.78rem;line-height:1.5;">1 hour from now</p>
+          </td>
+          <td width="4%"></td>
+          <td width="48%" style="background:#131313;border:1px solid #1e1e1e;border-radius:12px;padding:16px;vertical-align:top;">
+            <p style="margin:0;color:#4ade80;font-size:0.82rem;font-weight:700;">🔒 Stay Safe</p>
+            <p style="margin:6px 0 0;color:#555;font-size:0.78rem;line-height:1.5;">Ignore this if you didn't request it</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+
+    <!-- Footer -->
+    <tr><td style="border-top:1px solid #181818;padding:20px 48px 24px;text-align:center;">
+      <p style="color:#333;font-size:0.73rem;margin:0;line-height:1.8;">© ${new Date().getFullYear()} Trainova — All rights reserved<br>This is an automated email, please do not reply</p>
+    </td></tr>
+
+  </table>
+  </td></tr>
+</table>
+</body></html>`;
 
     const payload = {
         sender: { name: 'Trainova', email: process.env.BREVO_SENDER_EMAIL || 'noreply@trainova.app' },
@@ -211,6 +227,259 @@ async function sendResetEmail(toEmail, resetUrl, lang = 'en') {
     }
 
     console.log(`✅ Reset email sent via Brevo to ${toEmail} (messageId: ${response.data.messageId})`);
+}
+
+// ── Welcome Email ──
+async function sendWelcomeEmail(toEmail, username, name, lang = 'en') {
+    const isAr = lang === 'ar';
+    const subject = isAr
+        ? `مرحباً بك في Trainova، ${name}! 🎉`
+        : `Welcome to Trainova, ${name}! ⚡`;
+
+    /* ─────────── ARABIC ─────────── */
+    const htmlAr = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:0;background:#060606;font-family:'Cairo',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#060606;padding:40px 16px;">
+  <tr><td align="center">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background:#0f0f0f;border-radius:24px;border:1px solid #1c1c1c;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,0.8);">
+
+    <tr><td style="height:3px;background:linear-gradient(90deg,#ffc107,#ff6b00,#ff6b00,#ffc107);"></td></tr>
+
+    <!-- Header -->
+    <tr><td style="padding:44px 48px 36px;text-align:center;background:radial-gradient(ellipse at top,#1a1200 0%,#0f0f0f 70%);">
+      <table cellpadding="0" cellspacing="0" style="margin:0 auto 6px;">
+        <tr>
+          <td style="vertical-align:middle;padding-left:10px;">
+            <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:13px;width:46px;height:46px;line-height:46px;text-align:center;font-size:20px;display:inline-block;box-shadow:0 4px 20px rgba(255,193,7,0.4);">⚡</div>
+          </td>
+          <td style="vertical-align:middle;">
+            <span style="font-size:1.85rem;font-weight:900;letter-spacing:5px;color:#ffc107;">TRAINOVA</span>
+          </td>
+        </tr>
+      </table>
+      <div style="width:40px;height:2px;background:linear-gradient(90deg,#ffc107,#ff6b00);margin:14px auto 0;border-radius:2px;"></div>
+    </td></tr>
+
+    <!-- Hero -->
+    <tr><td style="padding:38px 48px 6px;text-align:center;">
+      <div style="font-size:52px;line-height:1;margin-bottom:18px;filter:drop-shadow(0 4px 12px rgba(255,193,7,0.25));">🎉</div>
+      <h1 style="color:#fff;font-size:1.65rem;font-weight:900;margin:0 0 8px;">أهلاً وسهلاً، <span style="color:#ffc107;">${name}</span>!</h1>
+      <p style="color:#555;font-size:0.88rem;margin:0;">حسابك جاهز — الرحلة تبدأ الآن</p>
+    </td></tr>
+
+    <!-- Account info -->
+    <tr><td style="padding:24px 48px 0;">
+      <div style="background:#131313;border-radius:14px;padding:22px 26px;border:1px solid #1e1e1e;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,193,7,0.2),transparent);"></div>
+        <p style="color:#444;font-size:0.7rem;font-weight:700;margin:0 0 14px;letter-spacing:1.5px;text-transform:uppercase;">معلومات حسابك</p>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding:9px 0;border-bottom:1px solid #1a1a1a;">
+              <span style="color:#444;font-size:0.84rem;">اسم المستخدم</span>
+            </td>
+            <td style="padding:9px 0;border-bottom:1px solid #1a1a1a;text-align:left;">
+              <span style="background:rgba(255,193,7,0.07);border:1px solid rgba(255,193,7,0.18);color:#ffc107;padding:3px 12px;border-radius:7px;font-size:0.88rem;font-weight:700;font-family:monospace;">@${username}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:9px 0;">
+              <span style="color:#444;font-size:0.84rem;">البريد الإلكتروني</span>
+            </td>
+            <td style="padding:9px 0;text-align:left;">
+              <span style="color:#666;font-size:0.84rem;">${toEmail}</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </td></tr>
+
+    <!-- Features -->
+    <tr><td style="padding:24px 48px 0;">
+      <p style="color:#444;font-size:0.7rem;font-weight:700;margin:0 0 14px;letter-spacing:1.5px;text-transform:uppercase;">ماذا يمكنك فعله الآن؟</p>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="48%" style="background:#131313;border:1px solid #1e1e1e;border-radius:12px;padding:16px;vertical-align:top;">
+            <p style="margin:0;font-size:1.2rem;">🏋️</p>
+            <p style="margin:7px 0 3px;color:#ddd;font-size:0.84rem;font-weight:700;">خطة تدريب مخصصة</p>
+            <p style="margin:0;color:#555;font-size:0.76rem;line-height:1.5;">30 يوماً من التمارين حسب هدفك</p>
+          </td>
+          <td width="4%"></td>
+          <td width="48%" style="background:#131313;border:1px solid #1e1e1e;border-radius:12px;padding:16px;vertical-align:top;">
+            <p style="margin:0;font-size:1.2rem;">📊</p>
+            <p style="margin:7px 0 3px;color:#ddd;font-size:0.84rem;font-weight:700;">تتبع تقدمك</p>
+            <p style="margin:0;color:#555;font-size:0.76rem;line-height:1.5;">إحصائيات وإنجازات يومية</p>
+          </td>
+        </tr>
+        <tr><td colspan="3" height="10"></td></tr>
+        <tr>
+          <td width="48%" style="background:#131313;border:1px solid #1e1e1e;border-radius:12px;padding:16px;vertical-align:top;">
+            <p style="margin:0;font-size:1.2rem;">🔥</p>
+            <p style="margin:7px 0 3px;color:#ddd;font-size:0.84rem;font-weight:700;">سلسلة التحدي</p>
+            <p style="margin:0;color:#555;font-size:0.76rem;line-height:1.5;">حافظ على نشاطك يوماً بعد يوم</p>
+          </td>
+          <td width="4%"></td>
+          <td width="48%" style="background:#131313;border:1px solid #1e1e1e;border-radius:12px;padding:16px;vertical-align:top;">
+            <p style="margin:0;font-size:1.2rem;">💪</p>
+            <p style="margin:7px 0 3px;color:#ddd;font-size:0.84rem;font-weight:700;">مكتبة تمارين</p>
+            <p style="margin:0;color:#555;font-size:0.76rem;line-height:1.5;">تمارين بالصور والتعليمات</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+
+    <!-- CTA -->
+    <tr><td style="padding:34px 48px;text-align:center;">
+      <a href="${process.env.APP_URL || 'https://trainova.up.railway.app'}" style="display:inline-block;background:linear-gradient(135deg,#ffc107 0%,#ff8c00 100%);color:#000;text-decoration:none;padding:16px 52px;border-radius:14px;font-weight:900;font-size:1rem;letter-spacing:1.5px;font-family:'Cairo',sans-serif;box-shadow:0 8px 32px rgba(255,193,7,0.25),0 2px 8px rgba(0,0,0,0.4);">⚡&nbsp; ابدأ تدريبك الآن</a>
+    </td></tr>
+
+    <!-- Footer -->
+    <tr><td style="border-top:1px solid #181818;padding:20px 48px 24px;text-align:center;">
+      <p style="color:#333;font-size:0.73rem;margin:0;line-height:1.8;">© ${new Date().getFullYear()} Trainova — جميع الحقوق محفوظة<br>هذا بريد آلي، لا تقم بالرد عليه</p>
+    </td></tr>
+
+  </table>
+  </td></tr>
+</table>
+</body></html>`;
+
+    /* ─────────── ENGLISH ─────────── */
+    const htmlEn = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:0;background:#060606;font-family:'Rajdhani',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#060606;padding:40px 16px;">
+  <tr><td align="center">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background:#0f0f0f;border-radius:24px;border:1px solid #1c1c1c;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,0.8);">
+
+    <tr><td style="height:3px;background:linear-gradient(90deg,#ffc107,#ff6b00,#ff6b00,#ffc107);"></td></tr>
+
+    <!-- Header -->
+    <tr><td style="padding:44px 48px 36px;text-align:center;background:radial-gradient(ellipse at top,#1a1200 0%,#0f0f0f 70%);">
+      <table cellpadding="0" cellspacing="0" style="margin:0 auto 6px;">
+        <tr>
+          <td style="vertical-align:middle;padding-right:12px;">
+            <div style="background:linear-gradient(135deg,#ffc107,#ff6b00);border-radius:13px;width:46px;height:46px;line-height:46px;text-align:center;font-size:20px;display:inline-block;box-shadow:0 4px 20px rgba(255,193,7,0.4);">⚡</div>
+          </td>
+          <td style="vertical-align:middle;">
+            <span style="font-size:1.85rem;font-weight:700;letter-spacing:6px;color:#ffc107;">TRAINOVA</span>
+          </td>
+        </tr>
+      </table>
+      <div style="width:40px;height:2px;background:linear-gradient(90deg,#ffc107,#ff6b00);margin:14px auto 0;border-radius:2px;"></div>
+    </td></tr>
+
+    <!-- Hero -->
+    <tr><td style="padding:38px 48px 6px;text-align:center;">
+      <div style="font-size:52px;line-height:1;margin-bottom:18px;filter:drop-shadow(0 4px 12px rgba(255,193,7,0.25));">🎉</div>
+      <h1 style="color:#fff;font-size:1.7rem;font-weight:700;margin:0 0 8px;letter-spacing:1px;">Welcome, <span style="color:#ffc107;">${name}</span>!</h1>
+      <p style="color:#555;font-size:0.88rem;margin:0;letter-spacing:0.3px;">Your account is ready — the journey starts now</p>
+    </td></tr>
+
+    <!-- Account info -->
+    <tr><td style="padding:24px 48px 0;">
+      <div style="background:#131313;border-radius:14px;padding:22px 26px;border:1px solid #1e1e1e;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,193,7,0.2),transparent);"></div>
+        <p style="color:#444;font-size:0.7rem;font-weight:700;margin:0 0 14px;letter-spacing:2px;text-transform:uppercase;">Your Account</p>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding:9px 0;border-bottom:1px solid #1a1a1a;">
+              <span style="color:#444;font-size:0.84rem;">Username</span>
+            </td>
+            <td style="padding:9px 0;border-bottom:1px solid #1a1a1a;text-align:right;">
+              <span style="background:rgba(255,193,7,0.07);border:1px solid rgba(255,193,7,0.18);color:#ffc107;padding:3px 12px;border-radius:7px;font-size:0.88rem;font-weight:700;font-family:monospace;">@${username}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:9px 0;">
+              <span style="color:#444;font-size:0.84rem;">Email</span>
+            </td>
+            <td style="padding:9px 0;text-align:right;">
+              <span style="color:#666;font-size:0.84rem;">${toEmail}</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </td></tr>
+
+    <!-- Features -->
+    <tr><td style="padding:24px 48px 0;">
+      <p style="color:#444;font-size:0.7rem;font-weight:700;margin:0 0 14px;letter-spacing:2px;text-transform:uppercase;">What you can do now</p>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="48%" style="background:#131313;border:1px solid #1e1e1e;border-radius:12px;padding:16px;vertical-align:top;">
+            <p style="margin:0;font-size:1.2rem;">🏋️</p>
+            <p style="margin:7px 0 3px;color:#ddd;font-size:0.84rem;font-weight:700;">Personalized Plan</p>
+            <p style="margin:0;color:#555;font-size:0.76rem;line-height:1.5;">30-day program tailored to your goal</p>
+          </td>
+          <td width="4%"></td>
+          <td width="48%" style="background:#131313;border:1px solid #1e1e1e;border-radius:12px;padding:16px;vertical-align:top;">
+            <p style="margin:0;font-size:1.2rem;">📊</p>
+            <p style="margin:7px 0 3px;color:#ddd;font-size:0.84rem;font-weight:700;">Track Progress</p>
+            <p style="margin:0;color:#555;font-size:0.76rem;line-height:1.5;">Daily stats and achievements</p>
+          </td>
+        </tr>
+        <tr><td colspan="3" height="10"></td></tr>
+        <tr>
+          <td width="48%" style="background:#131313;border:1px solid #1e1e1e;border-radius:12px;padding:16px;vertical-align:top;">
+            <p style="margin:0;font-size:1.2rem;">🔥</p>
+            <p style="margin:7px 0 3px;color:#ddd;font-size:0.84rem;font-weight:700;">Streak Challenge</p>
+            <p style="margin:0;color:#555;font-size:0.76rem;line-height:1.5;">Stay consistent, day after day</p>
+          </td>
+          <td width="4%"></td>
+          <td width="48%" style="background:#131313;border:1px solid #1e1e1e;border-radius:12px;padding:16px;vertical-align:top;">
+            <p style="margin:0;font-size:1.2rem;">💪</p>
+            <p style="margin:7px 0 3px;color:#ddd;font-size:0.84rem;font-weight:700;">Exercise Library</p>
+            <p style="margin:0;color:#555;font-size:0.76rem;line-height:1.5;">Visuals, tips & full instructions</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+
+    <!-- CTA -->
+    <tr><td style="padding:34px 48px;text-align:center;">
+      <a href="${process.env.APP_URL || 'https://trainova.up.railway.app'}" style="display:inline-block;background:linear-gradient(135deg,#ffc107 0%,#ff8c00 100%);color:#000;text-decoration:none;padding:16px 52px;border-radius:14px;font-weight:700;font-size:1rem;letter-spacing:2.5px;font-family:'Rajdhani',sans-serif;box-shadow:0 8px 32px rgba(255,193,7,0.25),0 2px 8px rgba(0,0,0,0.4);text-transform:uppercase;">⚡ Start Training Now</a>
+    </td></tr>
+
+    <!-- Footer -->
+    <tr><td style="border-top:1px solid #181818;padding:20px 48px 24px;text-align:center;">
+      <p style="color:#333;font-size:0.73rem;margin:0;line-height:1.8;">© ${new Date().getFullYear()} Trainova — All rights reserved<br>This is an automated email, please do not reply</p>
+    </td></tr>
+
+  </table>
+  </td></tr>
+</table>
+</body></html>`;
+
+    const payload = {
+        sender: { name: 'Trainova', email: process.env.BREVO_SENDER_EMAIL || 'noreply@trainova.app' },
+        to: [{ email: toEmail }],
+        subject,
+        htmlContent: isAr ? htmlAr : htmlEn
+    };
+
+    const response = await axios.post(BREVO_API_URL, payload, {
+        headers: {
+            'api-key': process.env.BREVO_API_KEY,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    });
+
+    if (response.status !== 201) {
+        throw new Error(`Brevo welcome email error: ${response.status} — ${JSON.stringify(response.data)}`);
+    }
+
+    console.log(`✅ Welcome email sent via Brevo to ${toEmail}`);
 }
 
 // ── Cloudinary config (set these 3 vars in Railway environment variables) ──
@@ -1158,6 +1427,14 @@ app.post('/api/register', async (req, res) => {
             user: userToReturn,
             token: Buffer.from(`${newUser._id}:${Date.now()}`).toString('base64')
         });
+
+        // Send welcome email (non-blocking)
+        if (process.env.BREVO_API_KEY) {
+            const lang = req.body.lang || 'en';
+            sendWelcomeEmail(newUser.email, newUser.username, newUser.name, lang)
+                .then(() => console.log(`✅ Welcome email sent to ${newUser.email}`))
+                .catch(err => console.error('❌ Welcome email failed:', err.message));
+        }
     } catch (error) {
         if (error.code === 11000) {
             const field = Object.keys(error.keyPattern)[0];
@@ -1236,7 +1513,7 @@ app.post('/api/forgot-password', async (req, res) => {
 
         if (process.env.BREVO_API_KEY) {
             console.log('📧 Attempting to send email to:', user.email);
-            sendResetEmail(user.email, resetUrl, lang)
+            sendResetEmail(user.email, resetUrl, lang, user.username)
                 .then(() => console.log('✅ Email sent successfully'))
                 .catch(err => console.error('❌ Email send failed:', err.message));
         } else {
