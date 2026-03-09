@@ -15,8 +15,11 @@ const emailTransporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS   // Gmail App Password (not regular password)
-    }
+        pass: process.env.EMAIL_PASS
+    },
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 10000
 });
 
 async function sendResetEmail(toEmail, resetUrl, lang = 'en') {
@@ -62,7 +65,7 @@ async function sendResetEmail(toEmail, resetUrl, lang = 'en') {
 // ── Cloudinary config (set these 3 vars in Railway environment variables) ──
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key:    process.env.CLOUDINARY_API_KEY,
+    api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
@@ -258,10 +261,10 @@ const WorkoutHistory = mongoose.model('WorkoutHistory', workoutHistorySchema);
 const WorkoutPlan = mongoose.model('WorkoutPlan', workoutPlanSchema);
 // ── Password Reset Token Schema ──
 const passwordResetTokenSchema = new mongoose.Schema({
-    userId:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    token:     { type: String, required: true, unique: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    token: { type: String, required: true, unique: true },
     expiresAt: { type: Date, required: true },
-    used:      { type: Boolean, default: false }
+    used: { type: Boolean, default: false }
 });
 passwordResetTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 const PasswordResetToken = mongoose.model('PasswordResetToken', passwordResetTokenSchema);
@@ -1041,7 +1044,7 @@ app.post('/api/check-user', async (req, res) => {
 app.post('/api/forgot-password', async (req, res) => {
     try {
         const identifier = (req.body.identifier || req.body.email || '').trim();
-        const lang = req.body.lang || 'en';  // 'ar' or 'en'
+        const lang = req.body.lang || 'en';
         if (!identifier) return res.status(400).json({ success: false, error: 'identifier_required' });
 
         const user = await User.findOne({
@@ -1052,10 +1055,8 @@ app.post('/api/forgot-password', async (req, res) => {
         });
         if (!user) return res.json({ success: false, error: 'user_not_found' });
 
-        // Invalidate any existing tokens for this user
         await PasswordResetToken.deleteMany({ userId: user._id });
 
-        // Generate a secure random token
         const rawToken = crypto.randomBytes(32).toString('hex');
         const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
@@ -1064,20 +1065,15 @@ app.post('/api/forgot-password', async (req, res) => {
         const appUrl = process.env.APP_URL || 'https://trainova.up.railway.app';
         const resetUrl = `${appUrl}/auth/reset-password?token=${rawToken}&lang=${lang}`;
 
-        // Send email
+        res.json({ success: true });
+
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-            try {
-                await sendResetEmail(user.email, resetUrl, lang);
-            } catch (emailErr) {
-                console.error('Email send failed:', emailErr.message);
-                // Don't expose email errors to client
-            }
+            sendResetEmail(user.email, resetUrl, lang)
+                .catch(err => console.error('Email send failed:', err.message));
         } else {
-            console.warn('EMAIL_USER / EMAIL_PASS not set — email not sent. Reset URL:', resetUrl);
+            console.warn('EMAIL_USER / EMAIL_PASS not set — Reset URL:', resetUrl);
         }
 
-        // Always return success (don't leak whether email was sent)
-        res.json({ success: true });
     } catch (e) {
         console.error('forgot-password error:', e);
         res.status(500).json({ success: false, error: 'server_error' });
