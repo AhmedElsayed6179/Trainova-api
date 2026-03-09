@@ -1700,15 +1700,27 @@ app.get('/api/verify-email', async (req, res) => {
         if (!token) return res.json({ success: false, error: 'missing_token' });
 
         const verifyToken = await EmailVerificationToken.findOne({ token, used: false });
-        if (!verifyToken) return res.json({ success: false, error: 'invalid_token' });
+        if (!verifyToken) {
+            // Token not found - could be used/expired. Can't determine user from token.
+            return res.json({ success: false, error: 'invalid_token' });
+        }
         if (verifyToken.expiresAt < new Date()) {
             await EmailVerificationToken.deleteOne({ _id: verifyToken._id });
             return res.json({ success: false, error: 'token_expired' });
         }
 
+        const targetUser = await User.findById(verifyToken.userId).select('emailVerified');
+        if (targetUser && targetUser.emailVerified) {
+            // Already verified - clean up token and let frontend know
+            await EmailVerificationToken.deleteOne({ _id: verifyToken._id });
+            return res.json({ success: false, error: 'already_verified' });
+        }
+
         await User.findByIdAndUpdate(verifyToken.userId, { emailVerified: true });
         await EmailVerificationToken.deleteOne({ _id: verifyToken._id });
 
+        // Check if the user was already verified before this token
+        const verifiedUser = await User.findById(verifyToken.userId).select('emailVerified');
         res.json({ success: true });
     } catch (e) {
         console.error('verify-email error:', e);
