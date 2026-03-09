@@ -1268,6 +1268,10 @@ app.post('/api/reset-password', async (req, res) => {
         const user = await User.findById(resetToken.userId);
         if (!user) return res.json({ success: false, error: 'user_not_found' });
 
+        // ── Reject if new password is same as the current one ──
+        const isSamePassword = await bcrypt.compare(newPassword, user.password);
+        if (isSamePassword) return res.json({ success: false, error: 'same_password' });
+
         user.password = await bcrypt.hash(newPassword, 10);
         await user.save();
 
