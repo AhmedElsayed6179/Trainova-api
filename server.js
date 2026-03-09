@@ -11,7 +11,10 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    family: 4, // Force IPv4 — Railway blocks IPv6 outbound
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
