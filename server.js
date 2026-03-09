@@ -10,17 +10,15 @@ const nodemailer = require('nodemailer');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// ── Nodemailer transporter ──
-// Railway blocks IPv6 — force IPv4 by resolving smtp.gmail.com manually
 const dns = require('dns');
-dns.setDefaultResultOrder('ipv4first'); // ← اجبر Node.js كله على IPv4
+dns.setDefaultResultOrder('ipv4first');
 
 const emailTransporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 587,          // 587 + STARTTLS أكثر استقراراً من 465 على Railway
-    secure: false,      // false مع port 587 (STARTTLS)
-    requireTLS: true,   // اجبره يستخدم TLS
-    family: 4,          // IPv4 فقط
+    port: 587, 
+    secure: false,
+    requireTLS: true,
+    family: 4,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
