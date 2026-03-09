@@ -7,19 +7,27 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const dns = require('dns');
+const net = require('net');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    family: 4, // Force IPv4 — Railway blocks IPv6 outbound
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+dns.setDefaultResultOrder('ipv4first');
+
+function createTransporterIPv4() {
+    return nodemailer.createTransport({
+        host: '74.125.130.108',
+        port: 465,
+        secure: true,
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+        },
+        tls: { servername: 'smtp.gmail.com' }
+    });
+}
+
+const transporter = createTransporterIPv4();
 
 async function sendResetEmail(toEmail, resetUrl, lang = 'en') {
     const isAr = lang === 'ar';
