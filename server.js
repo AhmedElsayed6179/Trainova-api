@@ -10,6 +10,35 @@ const axios = require('axios');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
+// ── reCAPTCHA v3 ──
+const RECAPTCHA_SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY || '6Lc-74UsAAAAAFrRJIc_dPbJh8Oxns0EzJtAhDq6';
+const RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify';
+const RECAPTCHA_MIN_SCORE   = 0.5; // reject anything below this threshold
+
+/**
+ * Verifies a reCAPTCHA v3 token server-side.
+ * Returns { success, score, action } or throws on network error.
+ */
+async function verifyRecaptcha(token, expectedAction = null) {
+    if (!token) return { success: false, score: 0 };
+    try {
+        const params = new URLSearchParams({ secret: RECAPTCHA_SECRET_KEY, response: token });
+        const resp = await axios.post(RECAPTCHA_VERIFY_URL, params.toString(), {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+        const data = resp.data;
+        // Optionally validate action name
+        if (expectedAction && data.action && data.action !== expectedAction) {
+            return { success: false, score: data.score || 0, reason: 'action_mismatch' };
+        }
+        const passed = data.success && (data.score >= RECAPTCHA_MIN_SCORE);
+        return { success: passed, score: data.score || 0, action: data.action };
+    } catch (err) {
+        console.error('reCAPTCHA verify error:', err.message);
+        return { success: false, score: 0 };
+    }
+}
+
 // ── Brevo (Sendinblue) Email Service ──
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
@@ -1599,6 +1628,14 @@ app.post('/api/register', async (req, res) => {
     try {
         const userData = req.body;
 
+        // ── reCAPTCHA v3 verification ──
+        const captchaReg = await verifyRecaptcha(userData.recaptchaToken, 'register');
+        if (!captchaReg.success) {
+            console.warn(`[reCAPTCHA] register blocked — score: ${captchaReg.score}`);
+            return res.json({ success: false, error: 'recaptcha_failed' });
+        }
+        delete userData.recaptchaToken; // don't store it
+
         if (await User.findOne({ phone: userData.phone })) return res.json({ success: false, error: 'phone_exists' });
         if (await User.findOne({ email: userData.email })) return res.json({ success: false, error: 'email_exists' });
         if (await User.findOne({ username: userData.username })) return res.json({ success: false, error: 'username_exists' });
@@ -1651,7 +1688,15 @@ app.post('/api/register', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
     try {
-        const { identifier, password } = req.body;
+        const { identifier, password, recaptchaToken } = req.body;
+
+        // ── reCAPTCHA v3 verification ──
+        const captcha = await verifyRecaptcha(recaptchaToken, 'login');
+        if (!captcha.success) {
+            console.warn(`[reCAPTCHA] login blocked — score: ${captcha.score}`);
+            return res.json({ success: false, error: 'recaptcha_failed' });
+        }
+
         const user = await User.findOne({ $or: [{ email: identifier }, { username: identifier }] });
         if (!user) return res.json({ success: false, error: 'invalid_credentials' });
 
@@ -1731,9 +1776,18 @@ app.get('/api/verify-email', async (req, res) => {
 // ── Resend verification email ──
 app.post('/api/resend-verification', async (req, res) => {
     try {
-        const { identifier, lang: reqLang } = req.body;
+        const { identifier, lang: reqLang, recaptchaToken: recaptchaTokenRV } = req.body;
         const lang = reqLang || 'en';
         if (!identifier) return res.status(400).json({ success: false, error: 'identifier_required' });
+
+        // ── reCAPTCHA v3 verification (optional — degrade gracefully) ──
+        if (recaptchaTokenRV) {
+            const captchaRV = await verifyRecaptcha(recaptchaTokenRV, 'resend_verification');
+            if (!captchaRV.success) {
+                console.warn(`[reCAPTCHA] resend-verification blocked — score: ${captchaRV.score}`);
+                return res.json({ success: false, error: 'recaptcha_failed' });
+            }
+        }
 
         const user = await User.findOne({
             $or: [{ email: identifier.toLowerCase() }, { username: identifier }]
@@ -1776,7 +1830,15 @@ app.post('/api/forgot-password', async (req, res) => {
     try {
         const identifier = (req.body.identifier || req.body.email || '').trim();
         const lang = req.body.lang || 'en';
+        const recaptchaTokenFP = req.body.recaptchaToken || '';
         if (!identifier) return res.status(400).json({ success: false, error: 'identifier_required' });
+
+        // ── reCAPTCHA v3 verification ──
+        const captchaFP = await verifyRecaptcha(recaptchaTokenFP, 'forgot_password');
+        if (!captchaFP.success) {
+            console.warn(`[reCAPTCHA] forgot-password blocked — score: ${captchaFP.score}`);
+            return res.json({ success: false, error: 'recaptcha_failed' });
+        }
 
         const user = await User.findOne({
             $or: [
@@ -1850,8 +1912,15 @@ app.post('/api/forgot-password', async (req, res) => {
 
 app.post('/api/reset-password', async (req, res) => {
     try {
-        const { token, newPassword } = req.body;
+        const { token, newPassword, recaptchaToken: recaptchaTokenRP } = req.body;
         if (!token || !newPassword) return res.status(400).json({ success: false, error: 'missing_fields' });
+
+        // ── reCAPTCHA v3 verification ──
+        const captchaRP = await verifyRecaptcha(recaptchaTokenRP, 'reset_password');
+        if (!captchaRP.success) {
+            console.warn(`[reCAPTCHA] reset-password blocked — score: ${captchaRP.score}`);
+            return res.json({ success: false, error: 'recaptcha_failed' });
+        }
 
         // Validate password strength server-side
         const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(newPassword);
