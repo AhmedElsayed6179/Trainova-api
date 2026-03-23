@@ -13,7 +13,7 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 // ── reCAPTCHA v3 ──
 const RECAPTCHA_SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY || '6Lc-74UsAAAAAFrRJIc_dPbJh8Oxns0EzJtAhDq6';
 const RECAPTCHA_VERIFY_URL = 'https://www.google.com/recaptcha/api/siteverify';
-const RECAPTCHA_MIN_SCORE   = 0.5; // reject anything below this threshold
+const RECAPTCHA_MIN_SCORE = 0.5;
 
 /**
  * Verifies a reCAPTCHA v3 token server-side.
@@ -2631,6 +2631,57 @@ async function updateStreak(userId) {
 
     await User.findByIdAndUpdate(userId, { current_streak: newStreak });
 }
+
+// ==================== CONTACT ====================
+
+app.post('/api/contact', async (req, res) => {
+    try {
+        const { name, email, subject, message, recaptchaToken } = req.body;
+
+        // ── reCAPTCHA v3 verification ──
+        const captcha = await verifyRecaptcha(recaptchaToken, 'contact');
+        if (!captcha.success) {
+            console.warn(`[reCAPTCHA] contact blocked — score: ${captcha.score}`);
+            return res.json({ success: false, error: 'recaptcha_failed' });
+        }
+
+        // ── Basic validation ──
+        if (!name || !email || !subject || !message) {
+            return res.json({ success: false, error: 'missing_fields' });
+        }
+
+        // ── Send email via Brevo ──
+        if (process.env.BREVO_API_KEY) {
+            const axios = require('axios');
+            await axios.post('https://api.brevo.com/v3/smtp/email', {
+                sender: { name: 'Trainova Contact', email: process.env.BREVO_SENDER_EMAIL || 'noreply@trainova.app' },
+                to: [{ email: process.env.CONTACT_RECEIVER_EMAIL || process.env.BREVO_SENDER_EMAIL || 'support@trainova.app' }],
+                replyTo: { email, name },
+                subject: `[Trainova Contact] ${subject}`,
+                htmlContent: `
+                    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#0f172a;color:#e2e8f0;padding:32px;border-radius:12px;">
+                        <h2 style="color:#F5A623;margin:0 0 24px;">📬 New Contact Message</h2>
+                        <table style="width:100%;border-collapse:collapse;">
+                            <tr><td style="padding:8px 0;color:#94a3b8;width:100px;">Name:</td><td style="padding:8px 0;font-weight:bold;">${name}</td></tr>
+                            <tr><td style="padding:8px 0;color:#94a3b8;">Email:</td><td style="padding:8px 0;"><a href="mailto:${email}" style="color:#F5A623;">${email}</a></td></tr>
+                            <tr><td style="padding:8px 0;color:#94a3b8;">Subject:</td><td style="padding:8px 0;">${subject}</td></tr>
+                        </table>
+                        <div style="margin-top:20px;padding:20px;background:rgba(255,255,255,0.05);border-radius:8px;border-left:3px solid #F5A623;">
+                            <p style="margin:0;line-height:1.7;white-space:pre-wrap;">${message}</p>
+                        </div>
+                        <p style="margin-top:20px;color:#64748b;font-size:12px;">Sent from Trainova Contact Form</p>
+                    </div>`
+            }, {
+                headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' }
+            });
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Contact form error:', error.message);
+        res.status(500).json({ success: false, error: 'server_error' });
+    }
+});
 
 // ==================== START SERVER ====================
 
